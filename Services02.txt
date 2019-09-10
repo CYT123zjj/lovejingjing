@@ -1,0 +1,882 @@
+######################################################
+检测虚拟机A与虚拟机B的Yum仓库
+[root@svr7 ~]# yum clean all    #清空缓存
+[root@svr7 ~]# yum repolist     #列出仓库信息
+
+#####################################################
+ DNS服务：域名解析   将域名解析ip地址
+
+DNS服务器的功能
+– 正向解析:根据注册的域名查找其对应的IP地址
+– 反向解析:根据IP地址查找对应的注册域名,不常用
+
+
+  所有完整的域名都要以点结尾：  www.qq.com.   www.baidu.com.
+
+
+
+                            .   根域    
+ 
+ 一级域名：   .cn    .us    .hk    .tw   .kr  .com  .net 
+
+
+二级域名:     .com.cn   .net.cn   .org.cn .edu.cn ......
+     
+
+三级域名:    nb.com.cn  dawai.com.cn   haha.com.cn  haxi.com.cn
+
+
+完整的主机名：  www.nb.com.cn   ftp.nb.com.cn  tts.nb.com.cn
+
+
+• Full Qualified Domain Name,完全合格主机名(FQDN)
+
+####################################################
+
+– 系统服务: named
+– 默认端口: 53
+– 运行时的虚拟根环境:/var/named/chroot/
+
+
+• 主配置文件:/etc/named.conf   #设置本机负责解析的域名  tedu.cn
+• 地址库文件:/var/named/       # 主机名与IP地址的对应记录
+       
+######################################################
+搭建基本的DNS服务
+
+服务端：虚拟机A
+1.安装一个可以提供域名解析的软件
+[root@svr7 ~]# yum -y install bind-chroot bind
+ bind-9.9.4-29.el7.x86_64    //域名服务包
+ bind-chroot-9.9.4-29.el7.x86_64   //提供虚拟根支持，牢笼政策
+
+2.修改主配置文件/etc/named.conf
+[root@svr7 ~]# vim /etc/named.conf 
+	options {
+		directory 	"/var/named";    #设置地址库文件路径
+	};
+	zone  "tedu.cn"  IN  {          #设置负责解析的域名
+		type master;                #设置本机为主DNS服务器
+		file "tedu.cn.zone";        #设置地址库文件名字
+	};
+
+3. 建立地址库文件/var/named/tedu.cn.zone
+
+   -p:权限不变进行拷贝
+
+# cp -p /var/named/named.localhost /var/named/tedu.cn.zone
+
+# vim  /var/named/tedu.cn.zone
+	tedu.cn.      NS      svr7         #指定本区域DNS服务器
+	svr7          A       192.168.4.7  #指定DNS服务器的IP地址
+	www           A       1.1.1.1
+	ftp           A       2.2.2.2
+
+# systemctl restart named   #重起服务
+
+客户端：虚拟机B
+验证DNS解析
+ # echo nameserver 192.168.4.7 > /etc/resolv.conf 
+ # nslookup   www.tedu.cn  #测试域名解析
+ # nslookup   ftp.tedu.cn  #测试域名解析
+
+####################################################
+
+搭建多区域的DNS
+
+  解析qq.com域名
+
+
+ 1.修改主配置文件
+	zone  "qq.com"  IN  {          
+		type master;               
+		file "qq.com.zone";        
+	};
+
+ 
+ 2.建立地址库文件 /var/named/qq.com.zone
+
+	qq.com.       NS      svr7        
+	svr7          A       192.168.4.7  
+	www           A       30.30.30.30
+	ftp           A       4.4.4.4
+  
+
+#######################################################
+特殊的解析记录
+
+一、DNS的轮询 
+虚拟机A：
+[root@svr7 ~]# vim /var/named/tedu.cn.zone
+
+ tedu.cn.        NS      svr7
+ svr7            A       192.168.4.7
+ www             A       192.168.4.10
+ www             A       192.168.4.20
+ www             A       192.168.4.30
+ ftp             A       2.2.2.2
+
+[root@svr7 ~]# systemctl restart named
+
+虚拟机B：验证
+[root@pc207 ~]# ping -c 1 www.tedu.cn
+[root@pc207 ~]# ping -c 1 www.tedu.cn
+[root@pc207 ~]# ping -c 1 www.tedu.cn
+
+二、泛域名解析
+
+虚拟机A：
+[root@svr7 ~]# vim /var/named/tedu.cn.zone
+
+  *               A       10.20.30.40
+  tedu.cn.        A       50.60.70.80
+
+[root@svr7 ~]# systemctl restart named
+
+虚拟机B：
+[root@pc207 ~]# nslookup   haha.tedu.cn
+[root@pc207 ~]# nslookup   xixi.tedu.cn
+[root@pc207 ~]# nslookup   tedu.cn
+
+三、有规律的泛域名解析
+
+       stu1.tedu.cn--------》192.168.10.1
+       stu2.tedu.cn--------》192.168.10.2
+       stu3.tedu.cn--------》192.168.10.3
+       stu4.tedu.cn--------》192.168.10.4
+          ......
+       stu50.tedu.cn--------》192.168.10.50
+   $GENERATE 造数工具  
+
+虚拟机A：
+[root@svr7 ~]# vim /var/named/tedu.cn.zone
+
+  *               A       10.20.30.40
+  tedu.cn.        A       50.60.70.80
+  $GENERATE  1-50  stu$   A  192.168.10.$
+
+[root@svr7 ~]# systemctl restart named
+
+虚拟机B：
+[root@svr7 ~]# nslookup  stu32.tedu.cn
+[root@svr7 ~]# nslookup  stu50.tedu.cn
+[root@svr7 ~]# nslookup  stu51.tedu.cn
+
+四、解析记录的别名
+虚拟机A：
+[root@svr7 ~]# vim /var/named/tedu.cn.zone
+
+   tts            CNAME    ftp
+
+[root@svr7 ~]# systemctl restart named
+
+虚拟机B：
+[root@svr7 ~]# nslookup  tts.tedu.cn
+[root@svr7 ~]# nslookup  ftp.tedu.cn
+
+
+##################################################
+DNS子域授权
+
+               
+               父域:   www.tedu.cn    虚拟机A
+
+               子域：  www.bj.tedu.cn  虚拟机B
+
+一、虚拟机B  搭建子域的DNS
+1.安装一个可以提供域名解析的软件
+[root@pc207 ~]# yum -y install bind-chroot bind
+2.修改主配置文件/etc/named.conf
+	options {
+		directory 	"/var/named";    
+	};
+	zone  "bj.tedu.cn"  IN  {         
+		type master;                
+		file "bj.tedu.cn.zone";     
+	};
+3. 建立地址库文件/var/named/bj.tedu.cn.zone
+# cp -p /var/named/named.localhost /var/named/bj.tedu.cn.zone
+
+# vim  /var/named/bj.tedu.cn.zone
+	bj.tedu.cn.      NS       pc207        
+	pc207             A       192.168.4.207  
+	www               A       1.2.3.4
+# systemctl restart named   #重起服务
+
+
+[root@pc207 /]# nslookup www.bj.tedu.cn 192.168.4.207
+
+######################################################
+
+子域授权
+        向 父域的DNS虚拟机A 解析 子域的域名  可以得到  虚拟机B  的结果
+
+虚拟机A：
+1.修改地址库文件/var/named/tedu.cn.zone
+ tedu.cn.        NS      svr7
+ bj.tedu.cn.     NS      pc207
+ svr7            A       192.168.4.7
+ pc207           A       192.168.4.207
+
+2.重起named服务
+测试验证
+[root@pc207 /]# nslookup www.bj.tedu.cn 192.168.4.7
+Server:		192.168.4.7
+Address:	192.168.4.7#53
+
+Non-authoritative answer:   #非权威解答
+Name:	www.bj.tedu.cn
+Address: 1.2.3.4
+
+
+DNS解析过程：
+递归解析：指DNS服务器与其他DNS服务器交互，最终将解析结果带回来的过程
+迭代解析：指DNS服务器与其他DNS服务器交互，最终将告知下一个DNS服务
+
+######################################################
+
+验证迭代查询
+• dig命令,更专业的DNS测试工具
+
+######################################################
+缓存DNS
+   作用：缓存解析结果，提高解析速度
+
+ 搭建方式：
+     1.全局转发，所有的DNS解析请求全部转发给公网DNS
+     2.根域迭代，所有的DNS解析请求全部发给根域DNS服务器
+
+真机上实现缓存DNS服务器
+
+1.搭建Yum仓库
+# mkdir /dvd
+# mount /iso/CentOS-7-x86_64-DVD-1708.iso  /dvd
+
+# ls /dvd
+# rm -rf /etc/yum.repos.d/*
+# vim /etc/yum.repos.d/dvd.repo
+
+  [dvd]
+  name=dvd
+  baseurl=file:///dvd
+  enabled=1
+  gpgcheck=0
+
+[root@room9pc01 ~]# yum -y install bind bind-chroot
+
+2.确认真机的DNS服务器
+[root@room9pc01 ~]# cat /etc/resolv.conf 
+ nameserver  172.40.1.10
+
+3.真机修改配置文件/etc/named.conf
+
+ options {
+         directory       "/var/named";
+         forwarders {   172.40.1.10;   };  #转发给172.40.1.10
+ };
+
+[root@room9pc01 ~]# systemctl restart named
+
+4.在虚拟机上解析
+[root@svr7 /]# nslookup www.qq.com 192.168.4.254
+[root@svr7 /]# nslookup www.360.com 192.168.4.254
+
+#######################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#######################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
