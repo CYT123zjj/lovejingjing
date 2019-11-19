@@ -1,0 +1,452 @@
+
+
+命令行基础
+
+什么是命令?
+• Linux命令
+– 用来实现某一类功能的指令或程序
+  Linux执行大多数命令，都要找到相应的程序
+
+绿色：可以执行程序
+
+[root@nsd ~]# ls /usr/bin/hostname
+/usr/bin/hostname
+[root@nsd ~]# 
+
+– 命令的执行依赖于解释器(默认的解释器：/bin/bash)
+
+    用户------->解释器------->内核------->硬件
+
+[root@nsd ~]# cat /etc/shells 
+/bin/sh
+/bin/bash
+/sbin/nologin
+/usr/bin/sh
+/usr/bin/bash
+/usr/sbin/nologin
+/bin/tcsh
+/bin/csh
+####################################################
+命令行的一般格式
+• 基本用法
+ – 命令字      [选项]...       [参数1]      [参数2]...
+
+[root@nsd ~]# cat --help              #查看命令的帮助信息
+[root@nsd ~]# cat -n /etc/shells      #显示行号
+[root@nsd ~]# cat -n /etc/redhat-release
+[root@nsd ~]# cat -n /etc/passwd
+[root@nsd ~]# cat -n /etc/shadow
+[root@nsd ~]# cat -n /etc/fstab
+
+  -l：使用较长格式列出信息，显示详细信息
+[root@nsd ~]# ls /etc/passwd
+[root@nsd ~]# ls -l /etc/passwd   #显示文件的详细属性
+[root@nsd ~]# ls -l /root/        #显示目录内容的详细属性
+[root@nsd ~]# ls -l  /etc/shadow
+
+容量单位：EB
+  1EB=1024PB
+  1PB=1024TB
+
+快速编辑技巧                                                    
+• Tab键自动补全
+– 可补齐命令字、选项、参数、文件路径、软件名、服务名
+
+[root@nsd ~]# if(Tab)(Tab)    #显示以if开头的所有命令
+
+[root@nsd ~]# ifco(Tab)
+
+[root@nsd ~]# cat /et(Tab)/red(Tab)
+
+[root@nsd ~]# ls /etc/sysconfig/network-scripts/ifcfg-eth0 
+
+]# ls /et(Tab)/sysco(Tab)/netw(Tab)-(Tab)/ifc(Tab)-e(Tab)
+
+
+• 快捷键
+– Ctrl + l:清空整个屏幕
+– Ctrl + c:废弃当前编辑的命令行（结束正在运行的命令）
+– Esc + . 或 Alt + .:粘贴上一个命令的参数
+
+– Ctrl + u:清空至行首
+– Ctrl + w:往回删除一个单词(以空格界定)
+
+[root@nsd ~]# ls /etc/shells 
+/etc/shells
+[root@nsd ~]# cat   ALT + .
+[root@nsd ~]# cat -n   ALT + .
+
+[root@nsd ~]# ls -l  ALT + .
+###################################################
+mount挂载操作：让目录成为设备的访问点
+1.从光盘中获得众多的软件包
+2.让Linux系统显示光盘所有的内容
+
+ Windows：
+    光盘文件------->光驱设备------->CD驱动器（图标）   #访问点
+
+ Linux：
+    光盘文件------->光驱设备------->访问点（目录）
+              /dev/hdc                         
+
+3.图形将光盘文件放入虚拟的光驱设备
+4.创建目录，进行挂载
+[root@nsd ~]# mkdir  /dvd    #创建目录，作为挂载点
+[root@nsd ~]# ls /dvd
+• 使用mount命令
+– 格式:mount  设备路径       挂载点目录
+ 青色：快捷方式
+[root@nsd /]# ls /dev/cdrom        #查看光驱设备的快捷方式
+[root@nsd /]# ls -l /dev/cdrom
+[root@nsd /]# mount /dev/cdrom  /dvd/
+mount: /dev/sr0 写保护，将以只读方式挂载
+
+[root@nsd /]# ls /dvd/
+[root@nsd /]# ls /dvd/Packages/
+5.卸载
+[root@nsd ~]# umount /dvd/
+[root@nsd ~]# ls /dvd/
+
+[root@nsd ~]# mkdir /nsd
+[root@nsd ~]# mount /dev/cdrom  /nsd
+[root@nsd ~]# ls /nsd
+[root@nsd ~]# umount /nsd
+[root@nsd ~]# ls /nsd
+注意事项：
+1.卸载时候，当前路径不能是挂载点
+[root@nsd dvd]# umount /dvd/
+umount: /dvd：目标忙。
+
+2.Linux允许一个设备，具有多个不同的挂载点
+3.强烈建议，挂载点目录自行创建
+######################################################
+• cd — Change Directory
+– 用途:切换工作目录
+– 格式:cd [目标文件夹位置]
+
+   ～：代表用户的家目录
+
+  /root：管理员用户的家目录
+  /home：存放所有普通用户家目录
+[root@nsd /]# cd ~root      #去往root用户的家目录
+[root@nsd ~]# pwd
+
+[root@nsd lisi]# useradd tom    #创建用户tom
+[root@nsd lisi]# cd ~tom        #去往tom用户的家目录
+[root@nsd tom]# pwd
+
+[root@nsd tom]# useradd harry   #创建用户harry
+[root@nsd tom]# cd ~harry       #去往harry用户的家目录
+[root@nsd harry]# pwd
+
+ . 表示当前目录
+
+######################################################
+ls 列出文档及属性
+• ls — List
+– 格式:ls [选项]... [目录或文件名]
+
+• 常用命令选项
+– -l:以长格式显示，显示详细属性
+– -d:显示目录本身(而不是内容)的属性
+– -h:提供易读的容量单位(K、M等)        
+
+– -A:包括名称以 . 开头的隐藏文档
+– -R：递归显示内容
+
+[root@nsd /]# ls -l /home/
+
+[root@nsd /]# ls -ld /home/    #显示目录本的详细属性
+[root@nsd /]# ls -ld /
+
+[root@nsd /]# ls -lh /boot/    #显示详细属性，加上易读的容量单位
+[root@nsd /]# ls -lh /root
+[root@nsd /]# ls -lh /etc/passwd
+
+[root@nsd /]# touch /opt/.xixi.txt
+[root@nsd /]# ls /opt/
+[root@nsd /]# ls -A /opt/
+
+[root@nsd /]# ls -R /opt
+[root@nsd /]# ls -R /root
+[root@nsd /]# ls -R /boot
+
+####################################################
+使用通配符
+• 针对不确定的文档名称,以特殊字符表示
+– *:任意多个任意字符
+– ?:单个字符
+[root@nsd /]# ls  /boot/v*     #以v开头的数据
+[root@nsd /]# ls  /dev/tty*    #以tty开头的数据
+[root@nsd /]# ls  /etc/*tab    #以tab结尾的数据
+[root@nsd /]# ls  /etc/*.conf  #以.conf结尾的数据
+
+[root@nsd /]# ls  /dev/tty?   #tty开头后面只有一个字符
+[root@nsd /]# ls  /dev/tty??  #tty开头后面必须有二个字符
+[root@nsd /]# ls  /etc/??tab  #tab结尾前面必须有二个字符
+
+• 针对不确定的文档名称,以特殊字符表示
+– [a-z]:多个字符或连续范围中的一个,若无则忽略
+– {a,min,xy}:多组不同的字符串,全匹配
+
+[root@nsd /]# ls /dev/tty[3-8]
+[root@nsd /]# ls /dev/tty[1-9]
+
+[root@nsd /]# ls /dev/tty{1,3,5,7,9,27}
+[root@nsd /]# ls /dev/tty{1,3,5,7,9,40}
+[root@nsd /]# ls /dev/tty{1,3,5,7,9,S0}
+
+####################################################
+别名的定义：简化复杂的命令
+• 查看已设置的别名
+– alias [别名名称]
+
+• 定义新的别名
+– alias 别名名称= '实际执行的命令行'
+
+• 取消已设置的别名
+– unalias [别名名称]
+
+[root@nsd /]# hostname
+[root@nsd /]# hn
+bash: hn: 未找到命令...
+
+[root@nsd /]# alias hn='hostname'  #定义别名
+[root@nsd /]# hn        #执行别名
+[root@nsd /]# alias     #显示当前系统生效的别名
+
+[root@nsd /]# alias myls='ls -lhd'
+[root@nsd /]# myls /opt/
+
+[root@nsd /]# unalias myls    #删除别名
+[root@nsd /]# alias    
+
+################################################
+mkdir 创建目录                                           
+• mkdir — Make Directory
+– 格式:mkdir [-p] [/路径/]目录名...
+
+]# mkdir -p /vod/movie/cartoon      #-p表示连父目录一起创建
+]# ls -R /vod
+
+]# mkdir -p /opt/aa/bb/cc/dd
+]# ls -R /opt/aa
+
+]# mkdir -p /opt/nsd/1909
+]# ls -R /nsd/
+
+###############################################
+rm 删除
+• rm — Remove
+– 格式:rm [选项]... 文件或目录...
+
+• 常用命令选项
+– -r、-f:递归删除(含目录)、强制删除
+[root@nsd /]# touch  /opt/1.txt
+[root@nsd /]# mkdir  /opt/nsd01
+[root@nsd /]# rm  -rf  /opt/1.txt
+[root@nsd /]# ls  /opt
+
+[root@nsd /]# rm  -rf  /opt/nsd01
+[root@nsd /]# ls  /opt
+
+################################################
+查找文本内容
+• 根据字符串模式提取文本行
+– grep [选项] '匹配模式'       文本文件...
+
+• 常用命令选项
+– -v,取反匹配
+– -i,忽略大小写
+[root@nsd /]# grep root /etc/passwd
+[root@nsd /]# grep -v root /etc/passwd
+
+[root@nsd /]# grep ROOT /etc/passwd
+[root@nsd /]# grep -i ROOT /etc/passwd
+
+• 常用的匹配模式
+– ^word 以字符串word开头
+– word$ 以字符串word结尾
+[root@nsd /]# grep ^root /etc/passwd
+[root@nsd /]# grep root$ /etc/passwd
+[root@nsd /]# grep bash$ /etc/passwd
+
+#####################################################
+mv 移动/改名
+• mv — Move
+– 格式:mv [选项]... 原文件...     目标路径
+[root@nsd /]# rm -rf /opt/*             
+[root@nsd /]# touch   /opt/1.txt
+[root@nsd /]# mkdir   /opt/nsd01
+[root@nsd /]# ls /opt/
+
+[root@nsd /]# mv /opt/1.txt  /opt/nsd01/
+[root@nsd /]# ls /opt/
+
+[root@nsd /]# ls /opt/nsd01
+
+重命名：路径不变的移动
+[root@nsd /]# mv /opt/nsd01  /opt/student
+[root@nsd /]# ls /opt/
+[root@nsd /]# mv /opt/student/  /opt/haha
+[root@nsd /]# ls /opt/
+[root@nsd /]# mv /opt/haha/  /opt/xixi
+[root@nsd /]# ls /opt/
+
+####################################################
+cp 复制
+• cp — Copy
+– 格式:cp [选项]... 原文件...     目标路径
+
+• 常用命令选项
+– -r:递归,复制目录时必须有此选项
+
+[root@nsd /]# cp /etc/passwd   /opt/
+[root@nsd /]# ls /opt/
+
+[root@nsd /]# cp /etc/redhat-release  /opt/
+[root@nsd /]# ls /opt/
+
+[root@nsd /]# cp /etc/fstab   /opt/
+[root@nsd /]# ls /opt/
+
+[root@nsd /]# cp -r /home/  /opt/
+[root@nsd /]# ls /opt/
+
+[root@nsd /]# cp -r /boot/ /opt/
+[root@nsd /]# ls /opt/
+
+复制时出现同名，实现强制覆盖
+[root@nsd /]# cp -r /boot/  /opt/
+[root@nsd /]# \cp -r /boot/  /opt/   #在本次操作，临时取消别名
+
+复制时可以支持多个参数，永远认为最后一个参数为目标，其他的所有参数都会认为是源
+]# rm -rf /opt/*
+]# cp -r  /boot/  /home/ /etc/passwd  /etc/fstab   /opt/
+]# ls /opt/
+
+复制与点进行连用    . :代表当前路径
+[root@nsd /]# cd /opt/
+[root@nsd opt]# pwd
+[root@nsd opt]# cp /etc/shells    .  
+[root@nsd opt]# ls
+
+[root@nsd opt]# cd /etc/sysconfig/network-scripts/
+[root@nsd network-scripts]# cp /etc/shadow  .   
+[root@nsd network-scripts]# ls 
+
+复制到目标路径，可以重新命名
+[root@nsd /]# cp /etc/group  /opt/g.txt
+[root@nsd /]# ls /opt/
+
+[root@nsd /]# cp /etc/passwd  /opt/p.txt
+[root@nsd /]# ls /opt/
+
+[root@nsd /]# cp /etc/fstab  /opt/f.txt
+[root@nsd /]# ls /opt/
+
+[root@nsd /]# cp -r /boot/  /opt/nsd19
+[root@nsd /]# ls /opt/
+####################################################
+重定向操作：将前面命令的输出，写入到文本文件     
+  >:覆盖重定向
+ >>:追加重定向
+
+[root@nsd /]# ls --help > /opt/ls.txt
+
+[root@nsd /]# hostname > /opt/ls.txt 
+[root@nsd /]# cat /opt/ls.txt
+
+[root@nsd /]# hostname >> /opt/ls.txt
+[root@nsd /]# cat /opt/ls.txt
+
+[root@nsd /]# cat /etc/redhat-release 
+[root@nsd /]# cat /etc/redhat-release  >> /opt/ls.txt 
+[root@nsd /]# cat /opt/ls.txt
+
+[root@nsd /]# echo hello
+hello
+[root@nsd /]# echo 123456
+123456
+
+[root@nsd /]# cat /opt/ls.txt 
+[root@nsd /]# echo 123456 >> /opt/ls.txt
+[root@nsd /]# cat /opt/ls.txt
+
+[root@nsd /]# echo hello >> /opt/ls.txt
+[root@nsd /]# cat /opt/ls.txt
+
+[root@nsd /]# echo linux >> /opt/ls.txt
+[root@nsd /]# cat /opt/ls.txt
+
+
+date：查看日期时间
+
+[root@nsd /]# date
+2019年 09月 29日 星期日 17:13:44 CST
+
+[root@nsd /]# date -s '年-月-日   时:分钟:秒'
+
+[root@nsd /]# date -s '2008-10-1 12:00:01'
+[root@nsd /]# date
+
+[root@nsd /]# date -s '2019-9-29 17:17:00'  #修改成正确的时间
+[root@nsd /]# date
+
+bc：交互式的计算器
+[root@nsd /]# bc
+  加+   减-   乘*     除/     取余数运算%
+
+ Ctrl +c  退出
+
+######################################################
+  |  管道操作：将前面命令的输出结果，传递给后面命令作为后面命令的参数
+
+显示/etc/passwd文件的8～12行内容？
+[root@nsd /]# head -12 /etc/passwd  | tail -5
+
+[root@nsd /]# head -12 /etc/passwd  | tail -5 |  cat -n
+[root@nsd /]# cat -n /etc/passwd | head -12   |  tail -5
+
+[root@nsd /]# ifconfig | head -2
+[root@nsd /]# ifconfig | less
+
+[root@nsd /]# echo 1+1 | bc
+[root@nsd /]# echo 3*6 | bc
+
+####################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

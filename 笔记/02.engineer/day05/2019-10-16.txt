@@ -1,0 +1,193 @@
+教学环境介绍
+开机时优先虚拟机classroom，所有的服务随机自启动
+
+真机：使用rht-vmctl辅助工具
+• 控制教学用虚拟机
+– 格式:rht-vmctl   控制指令     虚拟机名
+– 常用控制指令:
+]$ rht-vmctl reset classroom     #先重置资源服务器
+]$ rht-vmctl reset server
+]$ rht-vmctl reset desktop       #再重置练习虚拟机
+
+#####################################################
+
+环境准备1：修改防火墙默认的区域为trusted
+虚拟机server：
+[root@server0 ~]# firewall-cmd --set-default-zone=trusted
+ 
+虚拟机desktop：
+[root@desktop0 ~]# firewall-cmd --set-default-zone=trusted
+
+
+###########################################################
+交换空间（虚拟内存）
+   利用硬盘的空间，虚拟出内存
+   作用：当物理真实内存不够用时，暂时将内存中不常用的数据，放入交换空间，来缓解内存的压力
+
+1.划分两个主分区  分别为2G大小
+[root@server0 ~]# lsblk
+[root@server0 ~]# fdisk /dev/vdb
+ n---->分区的类型 回车---->分区的编号 回车---->起始点 回车---->结束点 +2G
+ p 输出分区表
+ n---->分区的类型 回车---->分区的编号 回车---->起始点 回车---->结束点 +2G
+ p 输出分区表
+ w 保存
+[root@server0 ~]# lsblk
+[root@server0 ~]# ls /dev/vdb[1-2]
+
+2.格式化交换文件系统（swap）
+[root@server0 ~]# mkswap /dev/vdb1  
+
+[root@server0 ~]# mkswap /dev/vdb2
+
+[root@server0 ~]# blkid /dev/vdb1    #查看文件系统类型
+
+[root@server0 ~]# blkid /dev/vdb2    #查看文件系统类型
+
+3.启用交换分区
+[root@server0 ~]# swapon -s               #查看交换空间组成信息
+[root@server0 ~]# swapon /dev/vdb1    #启用交换分区
+[root@server0 ~]# swapon -s            #查看交换空间组成信息
+   
+[root@server0 ~]# swapon /dev/vdb2
+[root@server0 ~]# swapon -s              #查看交换空间组成信息
+
+[root@server0 ~]# swapoff /dev/vdb2    #停用交换分区
+[root@server0 ~]# swapon -s              #查看交换空间组成信息
+
+[root@server0 ~]# swapoff /dev/vdb1   #停用交换分区
+[root@server0 ~]# swapon -s              #查看交换空间组成信息
+
+4.开机自动启用交换分区
+[root@server0 ~]# vim /etc/fstab 
+/dev/vdb1 swap swap defaults 0 0
+/dev/vdb2 swap swap defaults 0 0
+
+[root@server0 ~]# swapon -a   #专门检测swap分区是否书写正确
+[root@server0 ~]# swapon -s
+
+
+
+###########################################################
+Samba共享服务，跨平台的共享（Windows与Linux）
+
+     smb 共享协议      cifs 文件系统
+
+虚拟机server：                             
+1.安装软件
+[root@server0 ~]# yum -y install samba
+2.创建用户
+   Samba共享账户：专门用于访问samba共享时验证的用户
+   Samba共享账户：采用时独立的密码设置，不同于系统登陆的密码
+
+[root@server0 ~]# useradd harry
+[root@server0 ~]# pdbedit -a harry  #将本地用户添加为Samba共享账户
+new password:             #输入密码
+retype new password:      #重新输入密码
+
+[root@server0 ~]# pdbedit  -L   #列出当前系统所有Samba共享账户
+
+3.修改主配置文件
+[root@server0 ~]# mkdir /pub
+[root@server0 ~]# echo haha > /pub/a.txt
+[root@server0 ~]# ls /pub/
+[root@server0 ~]# vim /etc/samba/smb.conf 
+  命令模式下 按G（大写）  到全文的末行
+
+  [共享名]
+ path = 共享目录的路径
+
+ [nsd]            
+ path = /pub
+
+4.重起smb服务
+[root@server0 ~]# systemctl restart smb
+
+5.修改SELinux 布尔值（服务功能的开关）
+]# getsebool -a | grep samba          #查看所有的SELinux布尔值
+]# setsebool samba_export_all_ro=on   #修改SELinux布尔值
+]# getsebool -a | grep samba
+
+虚拟机desktop：                              
+1.安装软件包，支持cifs文件系统
+[root@desktop0 ~]# yum -y install cifs-utils
+
+2.挂载访问
+格式：
+ mount -o user=用户,pass=密码  //对方的IP地址/共享名     挂载点路径
+
+]# mkdir /mnt/stu
+]# mount -o user=harry,pass=123 //172.25.0.11/nsd  /mnt/stu
+]# df -h
+
+3.开机自动挂载samba的共享
+[root@desktop0 ~]# vim /etc/fstab 
+
+//172.25.0.11/nsd  /mnt/stu  cifs defaults,user=harry,pass=123,_netdev   0 0
+
+[root@desktop0 ~]# umount /mnt/stu/
+[root@desktop0 ~]# df -h
+
+[root@desktop0 ~]# mount -a
+[root@desktop0 ~]# df -h
+
+######################################################
+了解内容：使用LDAP认证,实现网络用户认证,达到用户的集中管理
+                                                              
+
+     网络用户:用户信息会放在网络中LDAP服务器
+     本地用户:用户信息会放在/etc/passwd
+
+
+LDAP服务器:虚拟机classroom
+
+客户端:虚拟机server
+1.安装sssd软件,与LDAP服务器沟通
+[root@server0 /]# yum -y install sssd
+[root@server0 /]# rpm -q sssd
+
+2.安装authconfig-gtk图形的工具,进行配置客户端sssd软件
+[root@server0 /]# yum -y install authconfig-gtk
+[root@server0 /]# authconfig-gtk
+
+完全合格的主机名  www.baidu.com　　　www.qq.com    
+               classroom.example.com
+
+     选择LDAP
+      dc=example,dc=com             #指定服务端域名
+      classroom.example.com         #指定服务端主机名
+     勾选TLS加密
+      使用证书加密:
+     http://classroom.example.com/pub/example-ca.crt
+
+     选择LDAP密码 
+
+
+
+3.重起服务
+[root@server0 ~]# systemctl  restart  sssd   #重起服务
+[root@server0 ~]# systemctl  enable  sssd    #设置开机自启动
+[root@server0 ~]# grep ldapuser0 /etc/passwd
+[root@server0 ~]# id ldapuser0     #验证LDAP用户信息
+          
+###################################################      
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

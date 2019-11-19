@@ -1,0 +1,144 @@
+
+案例：复制、删除、移动
+  1. 在目录/opt下创建一个子目录 nsd 
+   root@localhost ~]# mkdir /opt/nsd
+[root@localhost ~]# ls /opt/
+nsd  rh
+
+  2. 在目录/opt/nsd/创建文件readme.txt,利用vim写入内容 I Love Linux
+   root@localhost ~]# vim /opt/nsd/readme.txt
+   ctri+i   I love linux  shift+:   wq
+  3. 将/etc/passwd 和 /etc/resolv.conf同时拷贝到/opt/nsd目录下 
+    X[root@localhost ~]# cp -r /etc/passwd /etc/resolv.conf /opt/nsd
+[root@localhost ~]# ls /opt/nsd
+passwd  readme.txt  resolv.conf
+  4. 将文件 /etc/redhat-release复制到 /root/ 下，同时 改名为 version.txt
+    root@localhost ~]# cp -r /etc/redhat-release  /root/version.txt
+[root@localhost ~]# cd /root
+[root@localhost ~]# ls /root
+anaconda-ks.cfg       version.txt  模板  图片  下载  桌面
+initial-setup-ks.cfg  公共         视频  文档  音乐 
+  5. 将文件 /root/version.txt 移动到/opt/nsd/目录下
+    [root@localhost ~]# cp -rf /root/version.txt /opt/nds
+cp：是否覆盖"/opt/nds"？ y 
+[root@localhost ~]# ls /opt/nds
+/opt/nds
+[root@localhost ~]# ls /root/version.txt
+/root/version.txt
+[root@localhost ~]# ls /opt/nds
+/opt/nds
+[root@localhost ~]# 
+ 
+  6. 将/home目录复制到/opt/nsd/目录下 
+    [root@localhost ~]# cp -r /home /opt/nsd
+[root@localhost ~]# ls /opt/nsd
+home  passwd  readme.txt  resolv.conf
+
+
+案例：复制、删除、移动
+  1. 在目录/mnt下创建一个子目录 abc 
+    root@localhost ~]# mkdir /mnt/abc
+[root@localhost ~]# ls /mnt/
+abc
+  2. 在目录/mnt/abc/创建文件readme.txt,利用vim写入内容 I Love Study
+     vim /mnt/abc/readme.tx
+       ctrl+i Ilove study shift+:   wq
+  3. 将/etc/passwd 和 /etc/resolv.conf同时拷贝到/mnt/abc/目录下
+      root@localhost ~]# cp -r /etc/passwd /etc/resolv.conf  /mnt/abc
+[root@localhost ~]# ls /mnt/abc
+passwd  readme.tx  resolv.conf
+
+  4. 将文件 /etc/redhat-release复制到 /mnt/ 下，同时 改名为 version.txt
+    [root@localhost ~]# cp -r /etc/redhat-release /mnt/version.txt
+[root@localhost ~]# ls /mnt
+abc  version.txt
+
+  5. 将文件  /mnt/version.txt 移动到/opt/nsd/目录下强制覆盖
+    [root@localhost ~]# cp -rf /mnt/version.txt /opt/nsd
+[root@localhost ~]# ls /opt/nsd
+home  passwd  readme.txt  resolv.conf  version.txt
+ 
+  6. 将/boot目录复制到/mnt/abc/目录下 
+    [root@localhost ~]# cp -r /boot  /mnt/abc
+[root@localhost ~]# ls /mnt/abc
+boot  passwd  readme.tx  resolv.conf
+
+
+
+
+案例：ls命令练习
+  1. 查看根目录下内容
+    [root@localhost ~]# ls /
+bin   dev  home  lib64  mnt  proc  run   srv  tmp  var
+boot  etc  lib   media  opt  root  sbin  sys  usr
+
+  2. 显示根目录本身详细属性
+    [root@localhost ~]# ls -l /
+   
+  3. 切换到/boot目录，显示当前目录内容的详细属性，并加上易读的容量单位
+    [root@localhost ~]# cd /boot
+[root@localhost boot]# ls -l
+
+  4. 显示/root的全部内容，包括隐藏文档
+     [root@localhost boot]# ls -A /.
+
+  5. 显示/bin/bash程序，详细属性
+     [root@localhost bin]# ls -l /bin/bash
+-rwxr-xr-x. 1 root root 964544 4月  11 2018 /bin/bash
+
+  6. 显示/dev/cdrom光驱设备，详细属性
+     [root@localhost bin]# ls -l /dev/cdrom 
+lrwxrwxrwx. 1 root root 3 9月  29 18:29 /dev/cdrom -> sr0
+
+
+
+案例：mount挂载
+  1. 在根目录下创建目录结构/centos/dvd
+    [root@localhost bin]# mkdir -p  /centos/dvd
+  2. 利用图形将光盘文件CentOS7-1804.iso放入光驱设备中\
+     在左上角灯泡图标中选择 IDE COROMI-->在源路径中点击链接->选择iso中的iso/.Cent0s7-1884.isp镜像文件中点确定
+  3. 将光驱设备挂载到/centos/dvd目录，以/centos/dvd目录作为其访问点
+    root@nsd ~]# mount /dev/cdrom /centos/dvd/
+  4. 查看/centos/dvd/Packages目录内容
+     root@localhost centos]# la /centos/dvd/psckages
+
+  5. 将/centos/dvd/Packages目录中以vsftpd开头的软件包，拷贝到/opt下
+   cp  /centos/dvd/Packages/vsftpd*   /opt
+     cp  /centos/dvd/Packages/vsftpd*   /opt
+ 
+案例:虚拟机上操作,查找并提取文件内容
+    1.利用grep显示/etc/fstab文件中以UUID开头的信息
+      grep ^UUID /etc/fstab
+        UUID=506a4796-492a-4ae4-8388-9d7d8f1ad4ab /boot                   xfs     defaults        0 0
+
+    2.利用grep显示/etc/passwd以bash结尾的行
+     [root@localhost centos]# grep bash$ /etc/passwd
+root:x:0:0:root:/root:/bin/bash
+baba:x:1000:1000:baba:/home/baba:/bin/bash
+    3.利用grep显示/etc/login.defs 以#开头的行
+     [root@localhost centos]# grep ^# /etc/login.defs 
+#
+# Please note that the parameters in this configuration file control the
+# behavior of the tools from the shadow-utils component. None of these
+# tools uses the PAM mechanism, and the utilities that use PAM (such as the
+# passwd command) should therefore be configured elsewhere. Refer to
+# /etc/pam.d/system-auth for more information.
+
+    4.利用grep显示/etc/login.defs 不要以#开头的行
+     grep -v ^# /etc/login.defs 
+
+
+
+案例：别名
+  1. 为虚拟机定义一个别名，执行byebye可以实现关闭系统
+  [root@localhost centos]# alias byebye='poweroff'
+[root@localhost centos]# alias
+alias byebye='poweroff'
+alias cp='cp -i'
+alias egrep='egrep --color=auto'
+
+
+
+
+
+

@@ -1,0 +1,384 @@
+案例练习,准备:
+            rht-vmctl  reset  classroom
+            rht-vmctl  reset  server
+	    rht-vmctl  reset  desktop
+######################################################
+
+
+
+案例1:指定yum软件源
+为 server0 指定可用的 yum 软件源
+– YUM软件库的地址为 http://classroom.example.com/content/rhel7.0/x86_64/dvd
+– 将此配置为虚拟机 server0 的默认软件仓库
+– 确认可用的仓库列表
+	[root@server0 ~]# rm -rf /etc/yum.repos.d/*
+	[root@server0 ~]# vim /etc/yum.repos.d/server0.repo
+	[server0]
+	name=server
+	baseurl=http://classroom.example.com/content/rhel7.0/x86_64/dvd
+	enabled=1
+	gpgcheck=0
+
+	[root@server0 ~]# yum repolist 
+
+
+
+– 利用yum仓库安装httpd与vsftpd
+
+	[root@server0 ~]# yum -y install httpd
+	[root@server0 ~]# yum -y install vsftpd
+
+– 利用rpm命令检测是否安装成功
+
+	[root@server0 ~]# rpm -q httpd
+	httpd-2.4.6-17.el7.x86_64
+
+	[root@server0 ~]# rpm -q vsftpd
+	vsftpd-3.0.2-9.el7.x86_64
+
+
+案例2：虚拟机Server上操作
+  1. 新建目录结构/nsd19/test
+
+	[root@server0 ~]# mkdir -p /nsd19/test
+
+  2. 在目录/nsd19/test创建文件19.txt并写入内容 NSD  Student
+
+	[root@server0 ~]# echo NSD student > /nsd19/test/19.txt
+	[root@server0 ~]# cat /nsd19/test/19.txt
+	NSD student
+
+  3. 将/nsd19/test/19.txt文件复制到/root目录下，同时 改名为 tedu.txt
+
+	[root@server0 ~]# cp /nsd19/test/19.txt  /root/tedu.txt
+	[root@server0 ~]# ls /root/
+	 tedu.txt
+
+  4. 将/etc/passwd 、/etc/resolv.conf、/etc/hosts 同时拷贝到/nsd19/test/目录下
+
+	]# cp -r /etc/passwd /etc/resolv.conf /etc/hosts /nsd19/test/
+	[root@server0 ~]# ls /nsd19/test/
+	19.txt  hosts  passwd  resolv.conf
+
+  5. 将文件 /nsd19/test/hosts 重改名为 hs.txt 
+
+	[root@server0 ~]# cd /nsd19/test/
+	[root@server0 test]# ls
+	19.txt  hosts  passwd  resolv.conf
+
+	[root@server0 test]# mv /nsd19/test/hosts  /nsd19/test/hs.txt
+	[root@server0 test]# ls
+	19.txt  hs.txt  passwd  resolv.conf
+
+
+  6. 创建目录结构/boot/kernel
+
+	[root@server0 test]# mkdir /boot/kernel
+	[root@server0 test]# ls /boot/
+	kernel
+
+  7. 将目录 /boot内容中以 vm 开头的数据, 复制到/boot/kernel目录下 
+
+	]# find /boot/ -name 'vm*'
+	]# find /boot/ -name 'vm*' -exec cp {} /boot/kernel/ \;
+
+	[root@server0 test]# ls /boot/kernel/
+	vmlinuz-0-rescue-946cb0e817ea4adb916183df8c4fc817  		    			vmlinuz-3.10.0-123.el7.x86_64
+
+
+案例5:虚拟机 server0上操作，查找并处理文件
+ – 创建目录/root/findfiles/
+	
+	[root@server0 ~]# mkdir /root/findfiles
+	[root@server0 ~]# ls /root/
+	findfiles 
+
+ – 利用find查找所有用户 student 拥有的必须是文件,把它们拷贝到 /root/findfiles/ 文件夹中
+
+	]# find / -user student -type f
+	]# find / -user student -type f -exec cp {} /root/findfiles/ \;
+
+	[root@server0 ~]# ls -A /root/findfiles/
+	authorized_keys  .bash_profile  gnome-initial-setup-done  student
+	.bash_logout     .bashrc        monitors.xml
+
+ – 利用find查找/boot目录下大于10M并且必须是文件，拷贝到/opt
+
+	[root@server0 ~]# ls /opt/
+	[root@server0 ~]# find /boot/ -size +10M -type f 
+	/boot/initramfs-0-rescue-946cb0e817ea4adb916183df8c4fc817.img
+	/boot/initramfs-3.10.0-123.el7.x86_64.img
+
+	[root@server0 ~]# find /boot/ -size +10M -type f -exec cp {} /opt/ \;
+	[root@server0 ~]# ls /opt/
+	initramfs-0-rescue-946cb0e817ea4adb916183df8c4fc817.img
+	initramfs-3.10.0-123.el7.x86_64.img
+
+
+ – 利用find查找/boot/ 目录下以 vm 开头且必须是文件，拷贝到/opt
+
+	[root@server0 ~]# find /boot/ -name 'vm*' -type f 
+	[root@server0 ~]# find /boot/ -name 'vm*' -type f -exec cp {} /opt/ \;
+	[root@server0 ~]# ls /opt/
+	
+
+ – 利用find查找/boot/ 目录下为快捷方式
+
+	[root@server0 ~]# find /boot/ -type l
+	/boot/grub/menu.lst
+
+ – 利用find查找/etc 目录下，以 tab 作为结尾的 必须是文件
+
+	[root@server0 ~]# find /etc/ -name '*tab' -type f
+	/etc/fstab
+	/etc/crypttab
+	/etc/inittab
+	/etc/rwtab
+	/etc/statetab
+	/etc/anacrontab
+	/etc/crontab
+
+
+案例6:虚拟机 server0上操作,查找并提取文件内容
+    1.在文件 /usr/share/dict/words 中查找到所有包含字符串 seismic 的行,将输出信息,写入到/opt/nsd18.txt
+
+	[root@server0 ~]# grep seismic /usr/share/dict/words > /opt/nsd18.txt
+	[root@server0 ~]# ls /opt/
+	/opt/nsd18.txt
+	[root@server0 ~]# cat /opt/nsd18.txt
+
+
+    2.查看内核版本，将显示结果重定向到/root/version.txt
+
+	[root@server0 ~]# uname -r > /root/version.txt
+	[root@server0 ~]# cat /root/version.txt
+	3.10.0-123.el7.x86_64
+
+
+    3.查看红帽系统版本，将显示结果追加到/root/version.txt
+
+	[root@server0 ~]# cat /etc/redhat-release >> /root/version.txt 
+	[root@server0 ~]# cat /root/version.txt
+	3.10.0-123.el7.x86_64
+	Red Hat Enterprise Linux Server release 7.0 (Maipo)
+
+    4.查看主机名将显示结果追加到/root/version.txt
+
+	[root@server0 ~]# hostname >> /root/version.txt
+	[root@server0 ~]# cat /root/version.txt
+	3.10.0-123.el7.x86_64
+	Red Hat Enterprise Linux Server release 7.0 (Maipo)
+	server0.example.com
+
+
+    5.将/etc/fstab文件中以UUID开头的信息，写入到/root/fstab.txt
+
+	[root@server0 ~]# grep ^UUID /etc/fstab > /root/fstab.txt
+	[root@server0 ~]# cat /root/fstab.txt
+
+
+    6.提取/etc/passwd以bash结尾的行，将其信息写入/opt/pass.txt
+
+	[root@server0 ~]# grep bash$ /etc/passwd > /opt/pass.txt
+	[root@server0 ~]# cat /opt/pass.txt
+	root:x:0:0:root:/root:/bin/bash
+	student:x:1000:1000:Student User:/home/student:/bin/bash
+
+
+    7.复制/etc/login.defs文件到当前目录下，改名为init.txt
+
+	[root@server0 ~]# cp /etc/login.defs  init.txt .
+	[root@server0 ~]# ls /root/
+	init.txt
+
+    8.提取init.txt文件里的有效配置（去除以#号开头，去除空行），保存为init2.txt
+
+	 ]# grep -v ^$ /root/init.txt | grep -v ^# > /root/init2.txt 
+	[root@server0 ~]# cat /root/init2.txt
+
+
+案例7:在server上操作,（MBR分区模式）规划分区
+ 添加一块60G的硬盘并规划分区：
+   划分2个10G的主分区；1个12G的主分区;1个10G的逻辑分区。
+	[root@server0 ~]# lsblk
+	NAME   MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
+	vda    253:0    0  10G  0 disk 
+	└─vda1 253:1    0  10G  0 part /
+	vdb    253:16   0  10G  0 disk 
+	vdc    253:32   0  60G  0 disk 
+
+	[root@server0 ~]# fdisk /dev/vdc	
+	  n 创建新的分区----->回车----->回车---->回车----->在last结束时 +10G
+	  n 创建新的分区----->回车----->回车---->回车----->在last结束时 +10G
+	  n 创建新的分区----->回车----->回车---->回车----->在last结束时 +12G
+	  n 创建新的分区----->回车----->回车---->回车----->在last结束时---->回车
+	  n 创建新的分区----->回车----->回车---->回车----->在last结束时 +10G  
+	  w 保存并退出
+ 
+	[root@server0 ~]# lsblk
+	NAME   MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
+	vda    253:0    0  10G  0 disk 
+	└─vda1 253:1    0  10G  0 part /
+	vdb    253:16   0  10G  0 disk 
+	vdc    253:32   0  60G  0 disk 
+	├─vdc1 253:33   0  10G  0 part 
+	├─vdc2 253:34   0  10G  0 part 
+	├─vdc3 253:35   0  12G  0 part 	
+	├─vdc4 253:36   0   1K  0 part 
+	└─vdc5 253:37   0  10G  0 part 
+
+案例6:虚拟机 server0操作，构建 LVM 存储
+
+– 新建一个名为 systemvg 的卷组 
+
+	[root@server0 ~]# vgcreate systemvg /dev/vdb /dev/vdc1
+
+	[root@server0 ~]# vgs
+ 	 VG       #PV #LV #SN Attr   VSize  VFree 
+  	systemvg   2   0   0 wz--n- 19.99g 19.99g
+	[root@server0 ~]# pvs
+  	PV         VG       Fmt  Attr PSize  PFree 
+  	/dev/vdb   systemvg lvm2 a--  10.00g 10.00g
+  	/dev/vdc1  systemvg lvm2 a--  10.00g 10.00g
+
+
+– 在此卷组中创建一个名为 vo 的逻辑卷，大小为8G 
+
+	[root@server0 ~]# lvcreate -L 8G -n vo systemvg 
+  	Logical volume "vo" created
+
+	[root@server0 ~]# lvs
+  LV   VG       Attr       LSize Pool Origin Data%  Move Log Cpy%Sync Convert
+  vo   systemvg -wi-a----- 8.00g                                             
+	[root@server0 ~]# vgs
+  	VG       #PV #LV #SN Attr   VSize  VFree 
+  	systemvg   2   1   0 wz--n- 19.99g 11.99g
+
+
+
+
+– 将逻辑卷 vo 格式化为 xfs 文件系统 
+
+	[root@server0 ~]# mkfs.xfs /dev/systemvg/vo
+	[root@server0 ~]# blkid /dev/systemvg/vo
+	/dev/systemvg/vo: UUID="9c09a5dd-d294-4259-874d-cfa842b13252" TYPE="xfs" 
+
+
+– 将逻辑卷 vo 挂载到 /vo 目录，并在此目录下建立一个测试文件 votest.txt，内容为“I AM KING.” 
+	[root@server0 ~]# mkdir /vo
+	[root@server0 ~]# mount /dev/systemvg/vo  /vo
+	[root@server0 ~]# echo I AM KING > /vo/votest.txt
+	[root@server0 ~]# ls /vo
+	votest.txt
+
+	[root@server0 ~]# cat /vo/votest.txt
+	I AM KING
+
+	[root@server0 ~]# df -hT
+文件系统                      类型          容量   已用  可用     已用%  挂载点
+/dev/vda1               xfs        10G  3.1G  7.0G   31%   /                
+/dev/mapper/systemvg-vo xfs       8.0G   33M  8.0G    1%   /vo
+
+
+– 实现逻辑卷vo开机自动挂载到/vo
+
+	[root@server0 ~]# vim /etc/fstab 
+	/dev/systemvg/vo /vo xfs defaults 0 0
+
+	[root@server0 ~]# mount -a
+	[root@server0 ~]# df -hT
+文件系统                      类型          容量   已用  可用     已用%  挂载点
+/dev/vda1               xfs        10G  3.1G  7.0G   31%   /                
+/dev/mapper/systemvg-vo xfs       8.0G   33M  8.0G    1%   /vo
+
+
+案例7:虚拟机 server0操作，构建 LVM 存储(修改PE大小)
+– 新的逻辑卷命名为 database，其大小为50个PE的大小，属于 datastore 卷组 
+
+	[root@server0 ~]# vgcreate  datastore /dev/vdc2 /dev/vdc3
+
+	[root@server0 ~]# lvcreate -n database -L 200M datastore
+
+	[root@server0 ~]# lvs
+  LV       VG        Attr       LSize   Pool Origin Data%  Move Log Cpy%Sync Convert
+  database datastore -wi-a----- 200.00m                                             
+  vo       systemvg  -wi-ao----   8.00g 
+
+
+– 在 datastore 卷组中其PE的大小为1M
+
+	[root@server0 ~]# vgchange -s 1M datastore
+  
+	[root@server0 ~]# vgdisplay datastore
+	 PE Size               1.00 MiB
+
+
+– 使用 EXT4 文件系统对逻辑卷 database 格式化，此逻辑卷应该在开机时自动挂载到 /mnt/database 目录
+
+	[root@server0 ~]# mkdir /mnt/database
+
+	[root@server0 ~]# mkfs.ext4 /dev/datastore/database
+	[root@server0 ~]# blkid /dev/datastore/database
+
+	[root@server0 ~]# vim /etc/fstab 
+	/dev/datastore/database /mnt/database ext4 defaults 0 0
+
+	[root@server0 ~]# mount -a
+
+	[root@server0 ~]# df -hT
+文件系统                       类型      容量  已用  可用 已用% 挂载点
+/dev/vda1                      xfs        10G  3.1G  7.0G   31% /
+/dev/mapper/systemvg-vo        xfs       8.0G   33M  8.0G    1% /vo
+/dev/mapper/datastore-database ext4      190M  1.6M  175M    1% /mnt/database
+
+
+案例8:虚拟机 server0操作，扩展逻辑卷
+
+– 将/dev/systemvg/vo逻辑卷的大小扩展到20G
+
+	[root@server0 ~]# vgs
+	  VG        #PV #LV #SN Attr   VSize  VFree 
+	  datastore   2   1   0 wz--n- 21.99g 21.80g
+	  systemvg    2   1   0 wz--n- 19.99g 11.99g
+
+	[root@server0 ~]# vgextend systemvg /dev/vdc5
+
+	[root@server0 ~]# vgs
+	  VG        #PV #LV #SN Attr   VSize  VFree 
+	  datastore   2   1   0 wz--n- 21.99g 21.80g
+	  systemvg    3   1   0 wz--n- 29.99g 21.99g
+
+
+[root@server0 ~]# lvs
+  LV       VG        Attr       LSize   Pool Origin Data%  Move Log Cpy%Sync Convert
+  database datastore -wi-ao---- 200.00m                                             
+  vo       systemvg  -wi-ao----   8.00g 
+
+
+
+[root@server0 ~]# lvextend -L 20G /dev/systemvg/vo 
+
+[root@server0 ~]# lvs
+  LV       VG        Attr       LSize   Pool Origin Data%  Move Log Cpy%Sync Convert
+  database datastore -wi-ao---- 200.00m                                             
+  vo       systemvg  -wi-ao----  20.00g 
+
+
+[root@server0 ~]# df -h
+文件系统                        容量  已用  可用 已用% 挂载点
+/dev/mapper/systemvg-vo         8.0G   33M  8.0G    1% /vo
+
+
+[root@server0 ~]# blkid /dev/systemvg/vo
+/dev/systemvg/vo: UUID="9c09a5dd-d294-4259-874d-cfa842b13252" TYPE="xfs" 
+
+[root@server0 ~]# xfs_growfs /dev/systemvg/vo
+
+[root@server0 ~]# df -h
+文件系统                        容量  已用  可用 已用% 挂载点
+/dev/mapper/systemvg-vo          20G   33M   20G    1% /vo
+
+
+
+
+

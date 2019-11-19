@@ -1,0 +1,85 @@
+
+案例1:为虚拟机 手工配置静态地址参数
+– 主机名:hostame 
+hostame hostame 
+– IP地址:172.25.0.133
+– 子网掩码:255.255.255.0
+ifconfig eth0 172.25.0.133/24
+
+
+
+案例2:tar制作/释放归档压缩包（zcf、ztf、zxf、jcf、jtf、jxf、cf、tf）
+  首先创建/root/boothome/与/root/usrsbin/目录
+ mkdir /root/boothome/  /root/usrsbin/
+    1）备份/boot、/home这两个文件夹，保存为boothome.tar.gz文件
+tar -zcf /root/boothome/boothome.tar.gz  /boot
+tar -zcf /root/boothome/boothome.tar.gz  /home
+    2）查看boothome.tar.gz文件内包含哪些内容 
+tar -zcf /root/boothome/boothome.tar.gz  /boot
+    3）将boothome.tar.gz释放到文件夹/root/boothome/下
+tar -xf /root/boothome/boothome.tar.gz -C /root/boothome
+    4）备份/usr/sbin目录，保存为usrsbin.tar.bz2文件
+tar -jcf usrsbin.tar.bz2 /usr/sbin
+    5）查看文件内包含哪些内容
+tar -tf usrsbin.tar.bz2
+    6）将usrsbin.tar.bz2释放到/root/usrsbin/文件夹下
+tar -xf  /root/usrsbin.tar.bz2 -C /root/usrsbin
+
+
+案例3：添加并测试用户账号
+    1）创建一个名为stu01的用户账号
+useradd stu01
+    2）检查/etc/passwd、/etc/shadow文件的最后一行
+tail -1 /etc/passwd
+tail -1 /etc/shadow
+    3）检查/home/新增加的宿主目录（家目录）
+ls /home/
+    4）为用户stu01设置一个密码（123456）
+echo 123456 | passwd --stdin stu01
+
+案例4：添加账号时设置不同属性
+    1）新建用户nsd01，宿主目录位于/opt/nsd01
+ useradd -d /opt/nsd01 nsd01   
+    2）新建系统账号sys01，将UID设为1234，登录Shell设为/sbin/nologin
+useradd -s /sbin/nologin sys01
+    3）为用户sys01设置密码，并测试是否能够登录
+echo 123|passwd --stdin sys01
+su - sys01
+    4）新建用户admin，附加组设为adm、root
+ useradd admin
+gpasswd -a admin adm
+gpasswd -a admin root
+案例5：passwd设置密码
+    1）给用户nsd01设置密码123456
+passwd nsd01     123456  123456
+    2）采用--stdin方式将用户nsd01的密码设为654321
+echo 654321|passwd --stdin nsd01
+
+案例6：usermod修改用户
+    1）新建一个用户nsd03，将宿主目录设为/opt/home03，并设置密码
+useradd -d /opt/home03 nsd03
+echo 000000|passwd --stdin nsd03
+    2）设置nsd03密码为redhat
+echo redhat|passwd --stdin nsd03
+    3）将用户nsd03的宿主目录改为/home/nsd03
+ usermod -d /home/nsd03 nsd03
+    4）将用户sys01的登录Shell改为/bin/bash
+usermod -s /bin/bash sys01
+案例7：组账号基本管理
+    1）新建组账号stugrp
+groupadd stugrp
+    2）为stugrp组添加三个成员用户（user01、root、znhagsan）
+useradd user01
+useradd root
+useradd znhagsan
+gpasswd -a user01 stugrp
+gpasswd -a root stugrp
+gpasswd -a znhagsan stugrp
+    3）从stugrp组删除一个成员（user01）
+gpasswd -d user01 stugrp
+
+
+
+
+
+

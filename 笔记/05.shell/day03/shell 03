@@ -1,0 +1,211 @@
+回顾
+条件测试
+test 表达式         [  表达式  ]
+1,字符串  ==     !=        -n   -z
+2,逻辑测试    &&     ||      ;
+3,数字  -eq  -ne   -gt  -ge   -lt  -le
+4,文件  -e   -d   -f   -r   -w   -x
+--------------
+if  单分支   双分支   多分支
+if 条件测试1 ;then
+	执行指令1
+elif 条件测试2 ;then
+	执行指令2
+else
+	执行指令n
+fi
+--------------
+循环
+for 变量名称 in 值
+do
+	执行指令
+done
+while :
+do
+	执行指令
+done
+-------------
+ping -c   -i  -W
+RANDOM
+
+200行
+===========================
+case分支 ,功能类似if,不如if强大,代码比if精简
+-----------------
+case 变量名称 in
+模式1)
+	执行指令1 ;;
+模式2)
+	执行指令2 ;;
+*)
+	执行指令n
+esac
+------------------------------------------
+#!/bin/bash
+case $1 in
+t|T)
+        touch $2;;
+m|M|mm)
+        mkdir $2
+        echo 123;;
+r)
+        rm -rf $2;;
+*)
+        echo "请输入t|m|r"
+esac
+-------------------------------
+部署nginx服务
+-----------------------
+真实主机中:
+scp lnmp_soft.tar.gz root@server0:/opt
+----------------------
+虚拟机中:
+在虚拟机中释放该目录,并将其中的nginx-1.10.3.tar.gz拷贝到/opt下
+
+#!/bin/bash
+yum -y install gcc openssl-devel pcre-devel  &> /dev/null
+tar -xf nginx-1.10.3.tar.gz
+cd nginx-1.10.3
+./configure
+make
+make install
+执行完脚本后运行 /usr/local/nginx/sbin/nginx
+关闭防火墙 systemctl stop firewalld
+使用真机浏览器访问172.25.0.11可以看到欢迎页面
+-----------------------------
+echo -e "\033[92mABCD\033[0m"
+----------------------------
+函数,能够将公共的语句块存储在一个变量中,达到精简脚本的目的
+函数名称 (){
+指令
+}
+cecho (){
+        echo -e "\033[$1m$2\033[0m"
+}
+-------------------------------
+中断和退出
+exit	退出脚本
+break   退出循环,继续执行循环之后的任务
+continue  退出当前循环,继续下一次循环
+---------------------------------
+从键盘循环取整数（0结束）并求和，输出最终结果
+#!/bin/bash
+x=0
+while :
+do
+        read -p "请输入一个数字" n
+		[ -z $n ] && exit
+        [ $n -eq 0 ] && break
+        let x+=n
+done
+echo $x
+---------------------------------
+    找出1~20以内6的倍数，并输出她的平方值
+#!/bin/bash
+for i in {1..20}
+do
+        x=$[i%6]     x是余数
+        [ $x -eq 0 ] || continue   余数等于0就继续下面的任务
+        echo $[i*i]
+done
+
+===============================
+字符串处理
+1,字符串的截取,第一个字符系统定义序号是0
+${变量名:起始位置:长度} 
+echo ${a:1:1}   截取变量a,从第2个字符向后符截取1位
+echo ${a:4:2}   截取变量a,从第5个字符向后符截取2位 
+echo ${a:0:2}   截取变量a,从第1个字符向后符截取2位 ,且0可以省略
+-----------------------
+获取一位随机字符的脚本:
+#!/bin/bash
+a=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV
+WXYZ0123456789
+x=$[RANDOM%62]
+echo ${a:x:1}
+----------------------------------------
+获取8为随机密码的脚本:
+#!/bin/bash
+a=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV
+WXYZ0123456789
+for i in {1..8}
+do
+    x=$[RANDOM%62]
+    p=${a:x:1}
+    pa=$pa$p
+done
+echo $pa	
+------------------------------------------
+2 字符串的替换
+a=aabbccdd
+ ${变量名/old/new}         替换一个old为new
+ ${变量名/a/6}			a换成6
+ ${变量名//old/new} 	替换所有old为new
+ ${变量名//a/6}		所有a换成6
+ ${变量名/old/} 		删除一个old
+ ${变量名//old/} 		删除所有old
+------------------------------------------
+3,字符串的删除
+${变量名#被删除的内容}   掐头
+a=`head -1 /etc/passwd`
+echo $a
+root:x:0:0:root:/root:/bin/bash
+------------------------------------
+echo ${a#root}    删除第一个root
+echo ${a#root:x}   删除root:x
+echo ${a##*root}   删除到最后一个root,以及该root左边所有
+------------------------------------
+思考如何删除之后剩余   		echo ${a#*:root:}
+/root:/bin/bash
+-------------------------------------
+${变量名%被删除的内容}   去尾
+echo ${a%bash}    从右往左删除,到bash
+echo ${a%%/*}	  从右往左删除,到最后一个/ ,以及/右边所有
+-----------------------------------------------------------
+编写脚本,可以批量修改扩展名
+#!/bin/bash
+for i in `ls *.txt`   找到所有txt结尾的文件,交给for循环
+do
+        x=${i%.*}	 截取没有扩展名的文件名
+        mv $i $x.doc   改名时把这个文件名与.doc组合
+done
+升级版:
+#!/bin/bash
+for i in `ls *.$1`
+do
+        x=${i%.*}
+        mv $i $x.$2
+done
+将doc改回txt   bash test8.sh doc txt
+---------------------------------------
+设置变量的初值(备用值)
+a=
+echo ${a:-123}		a是空值时,使用初值123
+a=456				
+echo ${a:-123}		a非空时,不使用初值
+-----------------------------
+#!/bin/bash
+read -p "请输入用户名" n
+useradd $n
+read -p "请输入密码" p
+echo ${p:-123456} | passwd --stdin $n
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

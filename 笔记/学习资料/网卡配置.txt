@@ -1,0 +1,16 @@
+vim /etc/sysconfig/network-scripts/ifcfg-eth0
+
+BOOTPROTO=static          #静态获取ip地址
+ONBOOT=yes	              #开始自启
+IPADDR=192.168.246.15     #ip地址
+GATEWAY=192.168.246.2     #网关
+NETMASK=255.255.255.0     #子网掩码
+DNS1=114.114.114.114      #dns
+
+
+
+此配置项内容不分先后
+
+
+
+systemctl restart network    #重启网卡

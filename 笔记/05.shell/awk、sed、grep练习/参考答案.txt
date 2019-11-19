@@ -1,0 +1,117 @@
+
+一、grep命令练习
+1. 显示所有包含San的行
+
+grep -n "San" file
+
+2.显示所有以J开始的人名所在的行
+
+grep -n "^J" file
+
+3.显示所有以700结尾的行
+
+grep -n "700$" file
+
+4.显示所有不包括834的行
+
+grep -nv "834" file
+
+5.显示所有生日在December的行
+
+ grep -n ".*:12/" file
+
+6.显示所有电话号码的区号为498的行
+grep -n '\:486\' file
+
+7.显示所有这样的行:它包含一个大写字母,后跟四个小写字母,一个冒号,一个空格,和一个大写字母
+grep [A-Z][a-z][a-z][a-z][a-z][:::][[:space:]][A-Z] file
+
+8.显示姓以K或k开头的行
+
+grep -n "^[k,K]" file
+
+9.显示工资为六位数的行,并在前面加行号
+
+grep -n '([1-9]\{6,\}$' 
+
+10.显示包括Lincoln或lincoln的行,并且grep对大小写不敏感.
+grep -i 'lincoln' file
+
+二．sed命令大练习
+
+1.把Jon的名字改成Jonathan.
+
+sed -i "s#Jon#Jonathan#g" file
+
+2.删除头三行
+
+ sed -i '1,3d' file
+
+3.显示5-10行
+
+sed -n "5,10p" file
+
+4.删除包含Lane的行.
+
+sed '/Lane/d' file
+
+5.显示所有生日在November-December之间的行
+
+sed -n "/.*:1[1,2]\//p" file
+
+6.把三个星号(***)添加到以Fred开头的行
+
+sed -i "s#^Fred#***Fred#g" file
+
+7.用JOSE HAS RETIRED取代包含Jose的行
+
+sed -i "s#.*Jose.*#JOSE HAS RETIRED#g" file
+
+8.把Popeye的生日改成11/14/46
+
+cat datafile | grep Popeye | sed -e 's/3\/19\/35/11\/14\/46/'
+
+9.删除所有空白行
+
+sed "/^$/d" file
+
+三.awk命令大练习
+
+上面的数据库中包含名字,电话号码和过去三个月里的捐款
+1.显示所有电话号码
+
+awk -F "[ :]" '{print $4}' file
+
+2.显示Dan的电话号码
+
+awk -F "[ :]" 'NR==7 {print $4}' file
+
+3.显示Susan的名字和电话号码
+
+awk -F "[ :]" 'NR==3 {print $1,$4}' file
+
+或者awk -F ":" '/^Susan/{print $1,$2}' file
+
+4.显示所有以D开头的姓
+
+awk -F "[ :]" '{print $2}' file|awk '/^D/{print $0}'
+
+5.显示所有以一个C或E开头的名
+
+awk -F "[ ]" '/^[C,E]/{print $1}' file
+
+6.显示所有只有四个字符的名
+
+ awk -F "[ ]" '{if (length($1)==4) print $1}' file 
+
+7.显示所有区号为916的人名
+
+awk -F ":" '/\[916\]/{print $1}' file 
+
+8.显示Mike的捐款.显示每个值时都有以$开头.如$250$100$175
+
+awk -F "[ :]" '/^Mike/ {print "$"$5,"$"$6,"$"$7}' file
+
+9.显示姓,其后跟一个逗号和名,如Jody,Savage
+
+awk -F "[ :]" '{print$1","$2}' file

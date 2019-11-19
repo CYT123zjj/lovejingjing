@@ -1,0 +1,36 @@
+
+
+
+案例1：chmod权限设置
+[root@server0 ~]# mkdir  /nsddir
+[root@server0 ~]# touch /nsddir/readme.txt
+[root@server0 ~]# useradd   zhangsan
+[root@server0 ~]# setfacl  -m   u:zhangsan:rwx   /nsddir
+
+
+案例2：chown归属设置
+[root@server0 ~]# mkdir  /tarenal
+[root@server0 ~]# groupadd  tarena
+[root@server0 ~]# useradd  gelin01
+[root@server0 ~]# chown   gelin01:tarena   /tarenal
+[root@server0 ~]# chmod    o=---   /tarenal
+[root@server0 ~]# setfacl  -m   u:gelin01:rwx    /tarenal
+[root@server0 ~]# useradd    gelin02
+[root@server0 ~]# gpasswd    -a   gelin02   tarena
+正在将用户“gelin02”加入到“tarena”组中
+[root@server0 ~]# chmod    g=rx    /tarenal
+[root@server0 ~]# mkdir   /tarena2
+[root@server0 ~]# chown   :tarena    /tarena2
+[root@server0 ~]# chmod    g=rwx    /tarena2
+[root@server0 ~]# mkdir -r  /tarena/public
+root@server0 ~]# chmod    o=rwx    /tarena/public
+[root@server0 ~]# setfacl   -x   u:zhangsan    /tarena/public/
+
+案例3:权限设置
+[root@server0 ~]# mkdir -p    /data/test
+[root@server0 ~]# chmod u=rwx,g=rwx,o=--- /data/test/
+[root@server0 ~]# chown   -R   zhangsan:tarena   /data/test
+[root@server0 ~]# chmod   g+s   /data/test
+[root@server0 ~]# useradd  lisi
+[root@server0 ~]# setfacl  -m  u:lisi:r   /etc/shadow
+

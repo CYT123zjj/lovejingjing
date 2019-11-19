@@ -1,0 +1,204 @@
+案例练习,准备:
+            rht-vmctl  reset  classroom
+            rht-vmctl  reset  server
+	       rht-vmctl  reset  desktop
+######################################################
+
+案例1:为虚拟机 server 配置以下虚拟Web主机
+- 实现三个网站的部署
+- 实现客户端访问server0.example.com网页内容为 大圣归来
+- 实现客户端访问www0.example.com网页内容为  大圣又归来
+- 实现客户端访问webapp0.example.com网页内容为 大圣累了
+
+虚拟机server
+	[root@server0 ~]# firewall-cmd --set-default-zone=trusted 
+	[root@server0 ~]# firewall-cmd --get-default-zone 
+	trusted
+
+	[root@server0 ~]# yum -y install httpd
+
+	[root@server0 ~]# vim /etc/httpd/conf.d/zyw.conf
+	<VirtualHost *:80>
+        ServerName server0.example.com
+        DocumentRoot /var/www/nsd
+	</VirtualHost>
+	<VirtualHost  *:80>
+        ServerName www0.example.com
+        DocumentRoot /var/www/nsd1
+	</VirtualHost>
+	<VirtualHost  *:80>
+        ServerName webapp0.example.com
+        DocumentRoot /var/www/nsd2
+	</VirtualHost>
+
+	[root@server0 ~]# cd /var/www/
+	[root@server0 www]# mkdir nsd nsd1 nsd2
+	[root@server0 www]# ls
+	cgi-bin  html  nsd  nsd1  nsd2
+
+	[root@server0 www]# echo '<h1>大圣归来' > /var/www/nsd/index.html
+	[root@server0 www]# echo '<h1>大圣又归来' > /var/www/nsd1/index.html
+	[root@server0 www]# echo '<h1>大圣累了' > /var/www/nsd2/index.html
+
+	[root@server0 www]# systemctl restart httpd
+
+虚拟机desktop
+	[root@desktop0 ~]# firefox server0.example.com
+	[root@desktop0 ~]# firefox www0.example.com
+	[root@desktop0 ~]# firefox webapp0.example.com
+
+
+案例2:为虚拟机 server 配置Web访问控制
+在 Web 网站 http://server0.example.com 的 DocumentRoot 目录下创建一个名为 private 的子目录，要求如下：
+1）在server0.example.com的DocumentRoot目录下，private的子目录里书写网页文件index.html内容为  大圣偷偷归来
+2）此页面只能在本机浏览，但是从其他系统不能访问这个目录的内容
+
+虚拟机server
+	[root@server0 nsd]# mkdir /var/www/nsd/private
+	[root@server0 nsd]# ls
+	index.html  private
+
+[root@server0 nsd]# echo '<h1>wo shi private' > /var/www/nsd/private/index.html
+
+	[root@server0 nsd]# firefox server0.example.com/private  #访问成功
+
+虚拟机desktop
+	[root@desktop0 ~]# firefox server0.example.com/private  #访问成功
+
+虚拟机server
+	[root@server0 ~]# vim /etc/httpd/conf.d/zyw01.conf
+	<Directory   /var/www/nsd/private> 
+	    Require ip 172.25.0.11      
+	</Directory>
+
+	[root@server0 ~]# systemctl restart httpd
+	[root@server0 ~]# firefox server0.example.com/private  #访问成功
+
+虚拟机desktop
+	[root@desktop0 ~]# firefox server0.example.com/private   #访问失败
+	You don't have permission to access /private/ on this server.
+
+
+案例3:为虚拟机 server 使用自定Web根目录(保证SELinux为开启状态)
+
+调整 Web 站点 http://server0.example.com 的网页目录，要求如下：
+1）新建目录 /webroot，作为此站点新的网页目录
+2）确保站点 http://server0.example.com  仍然可访问
+
+虚拟机server
+	[root@server0 ~]# mkdir /webroot
+	[root@server0 ~]# echo '<h1>您好!我是webroot' > /webroot/index.html
+
+	[root@server0 ~]# vim /etc/httpd/conf.d/zyw.conf 
+	<VirtualHost *:80>
+	        ServerName server0.example.com
+	        DocumentRoot /webroot
+	</VirtualHost>
+
+
+	[root@server0 ~]# vim /etc/httpd/conf.d/zyw01.conf 
+	<Directory /webroot>
+	    Require all granted
+	</Directory>
+
+	[root@server0 ~]# systemctl restart httpd
+	[root@server0 ~]# getenforce 
+	Enforcing
+
+	[root@server0 ~]# chcon -R  --reference=/var/www  /webroot
+	[root@server0 ~]# firefox server0.example.com  #访问成功
+
+虚拟机desktop
+	[root@desktop0 ~]# firefox server0.example.com  #访问成功
+
+
+案例4：为虚拟机 server 部署动态WSGI站点
+为站点 webapp0.example.com 配置提供动态Web内容，要求如下：
+1）此虚拟主机侦听在端口8909
+2）测试网页从以下地址下载，不要作任何更改http://classroom/pub/materials/webinfo.wsgi 
+3）从浏览器访问 http://webapp0.example.com:8909 可接收到动态生成的 Web 页面
+
+虚拟机server
+[root@server0 ~]# cat /etc/httpd/conf.d/zyw.conf 
+	ServerName webapp0.example.com 
+	DocumentRoot /var/www/nsd2
+
+[root@server0 nsd2]# wget http://classroom/pub/materials/webinfo.wsgi 
+[root@server0 nsd2]# ls 
+index.html  webinfo.wsgi
+
+[root@server0 nsd2]# yum -y install mod_wsgi
+
+[root@server0 nsd2]# vim /etc/httpd/conf.d/zyw.conf 
+Listen   8909
+<VirtualHost  *:8909>
+        ServerName webapp0.example.com
+        DocumentRoot /var/www/nsd2
+        WsgiScriptAlias / /var/www/nsd2/webinfo.wsgi
+</VirtualHost>
+
+
+[root@server0 nsd2]# getenforce 
+Enforcing
+
+[root@server0 nsd2]# semanage port -a -t http_port_t -p tcp 8909
+[root@server0 nsd2]# systemctl restart httpd
+[root@server0 nsd2]# firefox webapp0.example.com   #访问失败
+[root@server0 nsd2]# firefox webapp0.example.com:8909   #访问成功
+
+虚拟机desktop
+[root@desktop0 ~]# firefox webapp0.example.com:8909   #访问成功
+
+
+
+案例5：配置安全Web服务
+为站点 http://www0.example.com 配置TLS加密 
+1）一个已签名证书从以下地址获取 http://classroom/pub/tls/certs/server0.crt 
+2）此证书的密钥从以下地址获取 http://classroom/pub/tls/private/server0.key 
+3）此证书的签名授权信息从以下地址获取 http://classroom/pub/example-ca.crt
+
+虚拟机server
+[root@server0 ~]# yum -y install mod_ssl
+
+[root@server0 ~]# cd /etc/pki/tls/certs 
+[root@server0 certs]# wget  http://classroom/pub/tls/certs/server0.crt
+[root@server0 certs]# ls
+server0.crt
+
+[root@server0 certs]# wget http://classroom/pub/example-ca.crt
+[root@server0 certs]# ls
+example-ca.crt
+
+[root@server0 certs]# cd /etc/pki/tls/private/
+[root@server0 private]# wget http://classroom/pub/tls/private/server0.key 
+[root@server0 private]# ls
+server0.key
+
+
+[root@server0 private]# cat /etc/httpd/conf.d/zyw.conf
+	ServerName www0.example.com
+	DocumentRoot /var/www/nsd1
+
+
+[root@server0 ~]# vim /etc/httpd/conf.d/ssl.conf
+ 59 DocumentRoot "/var/www/nsd1"
+ 60 ServerName www0.example.com:443
+100 SSLCertificateFile /etc/pki/tls/certs/server0.crt
+107 SSLCertificateKeyFile /etc/pki/tls/private/server0.key
+122 SSLCACertificateFile /etc/pki/tls/certs/example-ca.crt
+
+[root@server0 ~]# systemctl restart httpd
+[root@server0 ~]# firefox https://www0.example.com
+页面出现此连接不受信任--->点击'我已充分了解可能的风险'--->点击'添加例外'--->点击'确认安全例外'
+
+
+
+
+
+
+
+
+
+
+
+

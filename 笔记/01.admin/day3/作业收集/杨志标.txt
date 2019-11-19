@@ -1,0 +1,210 @@
+
+案例：复制、删除、移动
+  1. 在目录/opt下创建一个子目录 nsd 
+[root@lanceyan ~]# mkdir /opt/nsd
+[root@lanceyan ~]# ls /opt/
+boot  home  hostname.txt  nsd  redhat-release  rh
+
+  2. 在目录/opt/nsd/创建文件readme.txt,利用vim写入内容 I Love Linux
+[root@lanceyan ~]# touch /opt/nsd/readme.txt
+[root@lanceyan ~]# vi /opt/nsd/readme.txt
+[root@lanceyan ~]# cat /opt/nsd/readme.txt
+I Love Linux
+
+  3. 将/etc/passwd 和 /etc/resolv.conf同时拷贝到/opt/nsd目录下
+[root@lanceyan ~]# cp -r /etc/passwd /etc/resolv.conf /opt/nsd/
+
+  4. 将文件 /etc/redhat-release复制到 /root/ 下，同时 改名为 version.txt 
+[root@lanceyan ~]# cp -r /etc/redhat-release /root/version.txt
+
+  5. 将文件 /root/version.txt 移动到/opt/nsd/目录下 
+[root@lanceyan ~]# mv /root/version.txt /opt/nsd/
+
+  6. 将/home目录复制到/opt/nsd/目录下 
+[root@lanceyan ~]# cp -r /home/ /opt/nsd/
+
+－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－
+
+案例：复制、删除、移动
+  1. 在目录/mnt下创建一个子目录 abc 
+[root@lanceyan ~]# mkdir /mnt/abc
+
+  2. 在目录/mnt/abc/创建文件readme.txt,利用vim写入内容 I Love Study
+[root@lanceyan ~]# touch /mnt/abc/readme.txt
+[root@lanceyan ~]# vi /mnt/abc/readme.txt
+[root@lanceyan ~]# cat /mnt/abc/readme.txt
+I Love Study
+
+  3. 将/etc/passwd 和 /etc/resolv.conf同时拷贝到/mnt/abc/目录下
+[root@lanceyan ~]# cp -r /etc/passwd /etc/resolv.conf /mnt/abc/
+
+  4. 将文件 /etc/redhat-release复制到 /mnt/ 下，同时 改名为 version.txt 
+[root@lanceyan ~]# cp -r /etc/redhat-release /mnt/version.txt
+
+  5. 将文件  /mnt/version.txt 移动到/opt/nsd/目录下强制覆盖 
+[root@lanceyan ~]# mv /mnt/version.txt /opt/nsd/
+
+  6. 将/boot目录复制到/mnt/abc/目录下 
+[root@lanceyan ~]# cp -r /boot/ /mnt/abc/
+
+－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－
+
+案例：ls命令练习
+  1. 查看根目录下内容
+[root@lanceyan ~]# ls /
+bin  boot  dev  etc  home  lib  lib64  media  mnt  opt  proc  root  run  sbin  srv  sys  tmp  usr  var
+
+  2. 显示根目录本身详细属性   
+[root@lanceyan ~]# ls -ld /
+dr-xr-xr-x. 17 root root 224 9月  29 11:19 /
+
+  3. 切换到/boot目录，显示当前目录内容的详细属性，并加上易读的容量单位
+[root@lanceyan ~]# ls -lh /boot/
+总用量 130M
+-rw-r--r--. 1 root root 145K 4月  21 2018 config-3.10.0-862.el7.x86_64
+drwxr-xr-x. 3 root root   17 9月  28 10:17 efi
+drwxr-xr-x. 2 root root   27 9月  28 10:18 grub
+drwx------. 5 root root   97 9月  28 10:39 grub2
+-rw-------. 1 root root  71M 9月  28 10:34 initramfs-0-rescue-2f6f91447c0443248384582c1c2dcb77.img
+-rw-------. 1 root root  31M 9月  28 10:39 initramfs-3.10.0-862.el7.x86_64.img
+-rw-------. 1 root root  13M 9月  28 10:42 initramfs-3.10.0-862.el7.x86_64kdump.img
+-rw-r--r--. 1 root root 298K 4月  21 2018 symvers-3.10.0-862.el7.x86_64.gz
+-rw-------. 1 root root 3.3M 4月  21 2018 System.map-3.10.0-862.el7.x86_64
+-rwxr-xr-x. 1 root root 6.0M 9月  28 10:34 vmlinuz-0-rescue-2f6f91447c0443248384582c1c2dcb77
+-rwxr-xr-x. 1 root root 6.0M 4月  21 2018 vmlinuz-3.10.0-862.el7.x86_64
+
+  4. 显示/root的全部内容，包括隐藏文档
+[root@lanceyan ~]# ls -A /root/
+anaconda-ks.cfg  .bash_profile  .config  .esd_auth             .lesshst  公共  图片  音乐
+.bash_history    .bashrc        .cshrc   .ICEauthority         .local    模板  文档  桌面
+.bash_logout     .cache         .dbus    initial-setup-ks.cfg  .tcshrc   视频  下载
+
+  5. 显示/bin/bash程序，详细属性
+[root@lanceyan ~]# ls -l /bin/bash
+-rwxr-xr-x. 1 root root 964544 4月  11 2018 /bin/bash
+
+  6. 显示/dev/cdrom光驱设备，详细属性
+[root@lanceyan ~]# ls -l /dev/cdrom 
+lrwxrwxrwx. 1 root root 3 9月  29 18:54 /dev/cdrom -> sr0
+
+－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－
+
+案例：mount挂载
+  1. 在根目录下创建目录结构/centos/dvd
+[root@lanceyan ~]# mkdir -p /centos/dvd
+
+  2. 利用图形将光盘文件CentOS7-1804.iso放入光驱设备中
+
+  3. 将光驱设备挂载到/centos/dvd目录，以/centos/dvd目录作为其访问点
+[root@lanceyan ~]# mount /dev/cdrom /centos/dvd/
+mount: /dev/sr0 写保护，将以只读方式挂载
+
+  4. 查看/centos/dvd/Packages目录内容
+[root@lanceyan ~]# ls /centos/dvd/Packages/
+．．．
+
+  5. 将/centos/dvd/Packages目录中以vsftpd开头的软件包，拷贝到/opt下
+[root@lanceyan ~]# cp /centos/dvd/Packages/vsftpd* /opt/
+[root@lanceyan ~]# ls /opt/
+boot  hostname.txt  redhat-release  vsftpd-3.0.2-22.el7.x86_64.rpm
+home  nsd           rh              vsftpd-sysvinit-3.0.2-22.el7.x86_64.rpm
+
+－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－
+
+案例:虚拟机上操作,查找并提取文件内容
+    1.利用grep显示/etc/fstab文件中以UUID开头的信息
+[root@lanceyan ~]# grep ^UUID /etc/fstab 
+UUID=7b77b188-5e92-4885-ac58-e40be340e38e /boot                   xfs     defaults        0 0
+
+    2.利用grep显示/etc/passwd以bash结尾的行
+[root@lanceyan ~]# grep bash$ /etc/passwd
+root:x:0:0:root:/root:/bin/bash
+lisi:x:1000:1000:lisi:/home/lisi:/bin/bash
+
+    3.利用grep显示/etc/login.defs 以#开头的行
+[root@lanceyan ~]# grep ^# /etc/login.defs 
+#
+# Please note that the parameters in this configuration file control the
+# behavior of the tools from the shadow-utils component. None of these
+# tools uses the PAM mechanism, and the utilities that use PAM (such as the
+# passwd command) should therefore be configured elsewhere. Refer to
+# /etc/pam.d/system-auth for more information.
+#
+# *REQUIRED*
+#   Directory where mailboxes reside, _or_ name of file, relative to the
+#   home directory.  If you _do_ define both, MAIL_DIR takes precedence.
+#   QMAIL_DIR is for Qmail
+#
+#QMAIL_DIR	Maildir
+#MAIL_FILE	.mail
+# Password aging controls:
+#
+#	PASS_MAX_DAYS	Maximum number of days a password may be used.
+#	PASS_MIN_DAYS	Minimum number of days allowed between password changes.
+#	PASS_MIN_LEN	Minimum acceptable password length.
+#	PASS_WARN_AGE	Number of days warning given before a password expires.
+#
+#
+# Min/max values for automatic uid selection in useradd
+#
+# System accounts
+#
+# Min/max values for automatic gid selection in groupadd
+#
+# System accounts
+#
+# If defined, this command is run when removing a user.
+# It should remove any at/cron/print jobs etc. owned by
+# the user to be removed (passed as the first argument).
+#
+#USERDEL_CMD	/usr/sbin/userdel_local
+#
+# If useradd should create home directories for users by default
+# On RH systems, we do. This option is overridden with the -m flag on
+# useradd command line.
+#
+# The permission mask is initialized to this value. If not specified, 
+# the permission mask will be initialized to 022.
+# This enables userdel to remove user groups if no members exist.
+#
+# Use SHA512 to encrypt password.
+
+    4.利用grep显示/etc/login.defs 不要以#开头的行
+[root@lanceyan ~]# grep -v ^# /etc/login.defs 
+
+MAIL_DIR	/var/spool/mail
+
+PASS_MAX_DAYS	99999
+PASS_MIN_DAYS	0
+PASS_MIN_LEN	5
+PASS_WARN_AGE	7
+
+UID_MIN                  1000
+UID_MAX                 60000
+SYS_UID_MIN               201
+SYS_UID_MAX               999
+
+GID_MIN                  1000
+GID_MAX                 60000
+SYS_GID_MIN               201
+SYS_GID_MAX               999
+
+
+CREATE_HOME	yes
+
+UMASK           077
+
+USERGROUPS_ENAB yes
+
+ENCRYPT_METHOD SHA512 
+
+－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－
+
+案例：别名
+  1. 为虚拟机定义一个别名，执行byebye可以实现关闭系统
+ [root@lanceyan ~]# alias byebye='poweroff'
+
+
+
+
+

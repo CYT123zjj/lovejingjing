@@ -1,0 +1,150 @@
+案例1:指定yum软件源
+[root@server0 ~]# rm   -rf  /etc/yum.repos.d/*
+[root@server0 ~]# vim  /etc/yum.repos.d/dvd.repo
+
+[rhel7]
+name=kai
+baseurl=http://classroom.example.com/content/rhel7.0/x86_64/dvd
+enabled=1
+gpgcheck=0
+
+[root@server0 ~]# yum  -y  install  httpd
+[root@server0 ~]# rpm -q httpd
+httpd-2.4.6-17.el7.x86_64
+[root@server0 ~]# rpm -q vsftpd
+vsftpd-3.0.2-9.el7.x86_64
+
+案例2：虚拟机Server上操作
+[root@server0 ~]# mkdir -p  /nsd19/test
+[root@server0 ~]# touch  /nsd19/test/19.txt
+[root@server0 ~]# echo   NSD  Student  >  /nsd19/test/19.txt
+[root@server0 ~]# cat  /nsd19/test/19.txt
+NSD Student
+[root@server0 ~]# cp   /nsd19/test/19.txt    /root/tedu.txt
+[root@server0 ~]# cp  -r /etc/passwd  /etc/resolv.conf  /etc/hosts  /nsd19/test
+[root@server0 ~]# mv    /nsd19/test/hosts   /nsd19/test/hs.txt
+[root@server0 ~]# ls  /nsd19/test/
+19.txt  hs.txt  passwd  resolv.conf
+[root@server0 ~]# mkdir  -p  /boot/kernel
+[root@server0 ~]# find   /boot/  -name  'vm*'  -exec  cp  {}  /boot/kernel \;
+cp: "/boot/kernel/vmlinuz-3.10.0-123.el7.x86_64" 与"/boot/kernel/vmlinuz-3.10.0-123.el7.x86_64" 为同一文件
+cp: "/boot/kernel/vmlinuz-0-rescue-946cb0e817ea4adb916183df8c4fc817" 与"/boot/kernel/vmlinuz-0-rescue-946cb0e817ea4adb916183df8c4fc817" 为同一文件
+[root@server0 ~]# ls   /boot/kernel
+
+案例5:虚拟机 server0上操作，查找并处理文件
+[root@server0 ~]# mkdir  /root/findfiles
+[root@server0 ~]# find   /  -user  student  -type  f  -exec  cp  {}  /root/findfiles/  \;
+[root@server0 ~]# find   /boot   -size  +10M  -exec  cp  {}   /opt  \;
+[root@server0 ~]# find   /boot   -type  l
+/boot/grub/menu.lst
+[root@server0 ~]# find  /etc  -name  '*tab'
+/etc/fstab
+/etc/crypttab
+/etc/mtab
+/etc/inittab
+/etc/rwtab
+/etc/statetab
+/etc/anacrontab
+/etc/crontab
+
+案例6:虚拟机 server0上操作,查找并提取文件内容
+[root@server0 ~]# echo  | grep  seismic   /usr/share/dict/words > /opt/nsd18.txt
+[root@server0 ~]# uname -r > /root/version.txt
+[root@server0 ~]# uname -r > /root/version.txt
+[root@server0 ~]# cat   /etc/redhat-release
+[root@server0 ~]# cat   /etc/redhat-release  >>  /root/version.txt
+[root@server0 ~]# hostname
+server0.example.com
+[root@server0 ~]# hostname  >>  /root/version.txt
+[root@server0 ~]# grep  ^UUID  /etc/fstab  >>  /root/fstab.txt
+[root@server0 ~]# grep  bash$  /etc/passwd  >>  /opt/pass.txt
+[root@server0 ~]# cp   /etc/login.defs   /init.txt
+[root@server0 ~]# touch   init2.txt
+[root@server0 ~]# grep  -v ^#  /init.txt  |grep  -v  ^$  >>  /init2.txt
+
+案例7:在server上操作,（MBR分区模式）规划分区
+[root@server0 ~]# lsblk
+NAME   MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
+vda    253:0    0  10G  0 disk 
+└─vda1 253:1    0  10G  0 part /
+vdb    253:16   0  10G  0 disk 
+vdc    253:32   0  60G  0 disk 
+├─vdc1 253:33   0  10G  0 part 
+├─vdc2 253:34   0  10G  0 part 
+├─vdc3 253:35   0  12G  0 part 
+├─vdc4 253:36   0   1K  0 part 
+└─vdc5 253:37   0  10G  0 part 
+
+案例6:虚拟机 server0操作，构建 LVM 存储
+[root@server0 ~]# vgcreate  systemvg   /dev/vdb   /dev/vdc1  /dev/vdc2
+  Physical volume "/dev/vdb" successfully created
+  Physical volume "/dev/vdc1" successfully created
+  Physical volume "/dev/vdc2" successfully created
+  Volume group "systemvg" successfully created
+[root@server0 ~]# lvcreate  -L  8G  -n  vo systemvg
+  Logical volume "vo" created
+[root@server0 ~]# lvs
+[root@server0 ~]# mkfs.xfs    /dev/systemvg/vo
+[root@server0 ~]# blkid  /dev/systemvg/vo
+/dev/systemvg/vo: UUID="1887ca7a-6925-4baa-9bcd-1fd0ccd676fa" TYPE="xfs" 
+[root@server0 ~]# mkdir    /vo
+[root@server0 ~]# touch   /vo/votest.txt
+[root@server0 ~]# mount   /dev/systemvg/vo   /vo
+[root@server0 ~]# echo   I AM KING  >    /vo/votest.txt
+[root@server0 ~]# vim   /etc/fstab
+[root@server0 ~]# mount -a
+[root@server0 ~]# df  -h
+文件系统                 容量  已用  可用 已用% 挂载点
+/dev/vda1                 10G  3.1G  7.0G   31% /
+devtmpfs                 906M     0  906M    0% /dev
+tmpfs                    921M   80K  921M    1% /dev/shm
+tmpfs                    921M   17M  904M    2% /run
+tmpfs                    921M     0  921M    0% /sys/fs/cgroup
+/dev/mapper/systemvg-vo  8.0G   33M  8.0G    1% /vo
+
+案例7:虚拟机 server0操作，构建 LVM 存储(修改PE大小)
+[root@server0 ~]# vgcreate datastore /dev/vdc3 /dev/vdc5
+[root@server0 ~]# lvcreate  -L  50M  -n database   datastore
+[root@server0 ~]# vgchange  -s  1M  datastore
+  Volume group "datastore" successfully changed
+[root@server0 ~]# vgdisplay  datastore
+[root@server0 ~]# mkfs.ext4 /dev/datastore/database
+[root@server0 ~]# mount -a
+[root@server0 ~]# df  -Th
+文件系统                       类型      容量  已用  可用 已用% 挂载点
+/dev/vda1                      xfs        10G  3.1G  7.0G   31% /
+devtmpfs                       devtmpfs  906M     0  906M    0% /dev
+tmpfs                          tmpfs     921M   80K  921M    1% /dev/shm
+tmpfs                          tmpfs     921M   17M  904M    2% /run
+tmpfs                          tmpfs     921M     0  921M    0% /sys/fs/cgroup
+/dev/mapper/systemvg-vo        xfs       8.0G   33M  8.0G    1% /vo
+/dev/mapper/datastore-database ext4      190M  1.6M  175M    1% /mnt/database
+
+案例8:虚拟机 server0操作，扩展逻辑卷
+[root@server0 ~]# lvextend  -L 20G  /dev/systemvg/vo
+  Extending logical volume vo to 20.00 GiB
+  Logical volume vo successfully resized
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

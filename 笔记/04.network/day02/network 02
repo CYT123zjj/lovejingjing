@@ -1,0 +1,123 @@
+回顾
+网络功能 , 信息传递,资源共享,增加可靠,提高系统处理能力
+网络发展阶段, 60年代分组交换,70~80年代TCP/IP,90年代web技术
+iso国际标准化组织  ieee电气与电子工程师协会
+wan广域网 , lan局域网
+路由器    交换机
+网络拓扑: 1 点对点 2 星型  3网状
+7层  5层 
+
+应用层         pc
+传输层	   防火墙     数据段
+网络层	   路由器	  数据包
+数据链路层  交换机     数据帧
+物理层         网卡        比特流
+
+交换机的工作原理
+1 学习   2 广播   3 转发   4更新
+
+MAC地址  硬件地址   物理地址  
+数据帧
+
+用户视图   <>     系统视图   []   接口视图 [   -0/0/1]
+==========================================
+vlan  控制广播 增加安全 提高带宽利用率 延迟降低
+vlan可以创建4096个,范围是0~4095,但普通交换机在1000+左右
+vlan 配置方法:
+1,创建所需的vlan
+2,将接口加入对应的vlan
+----------------------------------------------------------
+vlan 2   创建vlan2
+vlan 3
+undo vlan 3   删除vlan3
+vlan batch 3 to 5  批量创建
+undo vlan batch 3 to 5  批量删除
+in e0/0/3
+port link-type access   修改接口类型, access是可以接入某一个vlan(或者理解为某一个vlan传输数据)
+port default vlan 2  将该接口加入vlan2
+in e0/0/4
+......  重复操作,也加入vlan2
+display vlan   查看vlan列表
+--------------------------------------------
+接口组可以将多个接口加入该组中,对该组配置的命令对多个接口生效
+vlan 3
+[Huawei]port-group 1   创建接口组,组号是1
+[Huawei-port-group-1]group-member Ethernet0/0/3 Ethernet0/0/4    在接口组中加入成员(接口) ,加了 3口和4口
+[Huawei-port-group-1]port default vlan 3  尝试将此接口组中的所有接口加入vlan3       下课休息  11:20回
+[Huawei-port-group-1]port default vlan 2
+
+access  接入链路   可以承载1个vlan  连接终端设备(pc,服务器)时使用
+trunk   中继链路   可以承载多个vlan  两台交换机互联时使用
+
+[Huawei]interface Ethernet0/0/7
+[Huawei-Ethernet0/0/7]port link-type trunk   将7号接口配置为中继链路
+[Huawei-Ethernet0/0/1]port trunk allow-pass vlan all  放行所有vlan的数据
+
+最后测试192.168.1.1可以ping通192.168.1.3
+	      192.168.2.1可以ping通192.168.2.3  则成功
+-------------------------------------------------------------------------
+链路聚合: 增加网络可靠
+1, 清空配置,清空后还需要开启此接口
+[Huawei] clear configuration interface Ethernet0/0/7
+[Huawei] in e0/0/7
+[Huawei-Ethernet0/0/7]undo shutdown
+2, 创建链路聚合接口
+[Huawei]interface Eth-trunk 1
+3,添加被捆绑的接口
+[Huawei- Eth-trunk1]trunkport ethernet 0/0/7  0/0/8
+[Huawei- Eth-trunk1]port link-type trunk
+[Huawei- Eth-trunk1]port trunk allow-pass vlan all
+[Huawei- Eth-trunk1]quit
+[Huawei]display cur   查询接口是否捆绑
+
+============================================
+网络层   路由器   主要用来连接不同范围的网络
+
+A 1~127
+255.0.0.0
+B 128~191
+255.255.0.0
+C 192~223
+255.255.255.0
+11111111.11111111.11111111.00000000
+网络位           主机位
+192.168.0.0~192.168.0.255   可用范围 192.168.0.1~192.168.0.254
+192.168.1.1
+
+每个网段第一个地址称为网络ID,最后一个地址是广播地址
+
+172.16.0.1    172.16.0.254   172.16.0.255   172.16.255.255
+===============================
+使用路由器连接不同网络:
+1, 在接口配置ip地址
+[Huawei]interface GigabitEthernet 0/0/0
+[Huawei-GigabitEthernet0/0/1]ip address 192.168.1.254 24
+[Huawei-GigabitEthernet0/0/1]quit
+[Huawei]interface GigabitEthernet 0/0/1
+[Huawei-GigabitEthernet0/0/1]ip address 192.168.2.1 24
+然后 pc 配置好网关即可全网互通
+--------------------------------------------------------------
+路由器依靠路由表进行数据转发,路由表中的信息可以依靠以下途径获得
+1,直连路由  接口配置ip并开启,自动产生
+2,静态路由  由管理员手工配置
+	ip route-static  目标网段的网络ID 子网掩码  下一跳
+3,默认路由  是一种特殊的静态路由,可以匹配任意网络,通常用在访问外网时使用
+	ip route-static  0.0.0.0 0  下一跳
+第二台路由器:
+[Huawei]ip route-static 192.168.1.0 24 192.168.2.1
+第一台路由器:
+[Huawei]ip route-static 192.168.3.0 24 192.168.2.2
+[Huawei]ip route-static 192.168.4.0 24 192.168.2.2
+display ip interface brief   查看路由表(只看/24即可)
+
+
+win环境 ping 192.168.0.1 -l  200  改变ping包大小
+	   ping 192.168.0.1 -t   一直ping
+
+
+
+
+
+
+
+

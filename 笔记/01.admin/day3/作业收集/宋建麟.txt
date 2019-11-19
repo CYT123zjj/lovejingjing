@@ -1,0 +1,81 @@
+宋建麟
+案例1：复制、删除、移动
+[root@boy ~]# mkdir /opt/nsd
+[root@boy ~]# touch /opt/nsd/readme.txt
+[root@boy ~]# vim /opt/nsd/readme.txt
+[root@boy ~]# cp -r /etc/passwd   /etc/resolv.conf    /opt/nsd
+[root@boy ~]# ls -R /opt/nsd
+/opt/nsd:
+passwd  readme.txt  resolv.conf
+[root@boy ~]# cp  /etc/redhat-release /root/version.txt
+[root@boy ~]# mv  /root/version.txt   /opt/nsd
+[root@boy ~]# cp -r /home    /opt/nsd
+[root@boy ~]# 
+案例2：复制、删除、移动
+[root@boy ~]# 
+[root@boy ~]# mkdir /mnt/abc
+[root@boy ~]# touch  /mnt/abc/readme.txt
+[root@boy ~]# vim /mnt/abc/readme.txt
+[root@boy ~]# cp  /etc/passwd    /etc/resolv.conf   /mnt/abc
+[root@boy ~]# cp /etc/redhat-release   /mnt/version.txt
+[root@boy ~]# mv /mnt/version.txt    /opt/nsd
+mv：是否覆盖"/opt/nsd/version.txt"？ y
+[root@boy ~]# cp  -r/boot     /mnt/abc
+cp：无效选项 -- /
+Try 'cp --help' for more information.
+[root@boy ~]# cp  -r /boot     /mnt/abc
+案例：ls命令练习
+[root@boy ~]# ls /
+bin   dev  etc   kind  lib64  mnt  opt   root  sbin  srv  tmp  var
+boot  dvd  home  lib   media  nsd  proc  run   six   sys  usr
+[root@boy ~]# ls -ld /
+dr-xr-xr-x. 21 root root 269 9月  29 15:53 /
+[root@boy ~]# cd /boot
+[root@boy boot]# ls -lh .
+总用量 130M
+-rw-r--r--. 1 root root 145K 4月  21 2018 config-3.10.0-862.el7.x86_64
+drwxr-xr-x. 3 root root   17 9月  28 10:17 efi
+drwxr-xr-x. 2 root root   27 9月  28 10:18 grub
+drwx------. 5 root root   97 9月  28 10:38 grub2
+-rw-------. 1 root root  71M 9月  28 10:33 initramfs-0-rescue-99c8dd20dd6a4bceb589cfbc73dd3ca6.img
+-rw-------. 1 root root  31M 9月  28 10:38 initramfs-3.10.0-862.el7.x86_64.img
+-rw-------. 1 root root  13M 9月  28 10:39 initramfs-3.10.0-862.el7.x86_64kdump.img
+-rw-r--r--. 1 root root 298K 4月  21 2018 symvers-3.10.0-862.el7.x86_64.gz
+-rw-------. 1 root root 3.3M 4月  21 2018 System.map-3.10.0-862.el7.x86_64
+-rwxr-xr-x. 1 root root 6.0M 9月  28 10:33 vmlinuz-0-rescue-99c8dd20dd6a4bceb589cfbc73dd3ca6
+-rwxr-xr-x. 1 root root 6.0M 4月  21 2018 vmlinuz-3.10.0-862.el7.x86_64
+[root@boy boot]# ls -A /root
+anaconda-ks.cfg  .cache     four                  .tcshrc   图片
+.bash_history    .config    .ICEauthority         .viminfo  文档
+.bash_logout     .cshrc     initial-setup-ks.cfg  公共      下载
+.bash_profile    .dbus      .lesshst              模板      音乐
+.bashrc          .esd_auth  .local                视频      桌面
+[root@boy boot]# ls -l /bin/bash
+-rwxr-xr-x. 1 root root 964544 4月  11 2018 /bin/bash
+[root@boy boot]# ls -l  /dev/cdrom
+lrwxrwxrwx. 1 root root 3 9月  29 18:54 /dev/cdrom -> sr0
+[root@boy boot]# 
+案例：mount挂载
+[root@boy boot]# mkdir /centos/dvd
+[root@boy boot]# mount /dev/cdrom  /centos/dvd
+mount: /dev/sr0 写保护，将以只读方式挂载
+[root@boy boot]# ls /centos/dvd/Packages
+[root@boy boot]# cp  /centos/dvd/Packages/vsftpd*     /opt
+
+案例:虚拟机上操作,查找并提取文件内容
+[root@boy boot]# grep ^UUID  /etc/fstab
+UUID=accb3586-13df-4cef-a230-fb223b03655d /boot                   xfs     defaults        0 0
+[root@boy boot]# grep bash$ /etc/passwd
+root:x:0:0:root:/root:/bin/bash
+lisi:x:1000:1000:lisi:/home/lisi:/bin/bash
+cole:x:1001:1001::/home/cole:/bin/bash
+paisi:x:1002:1002::/home/paisi:/bin/bash
+[root@boy boot]# grep   ^#  /etc/login.defs
+[root@boy ~]# grep  -v   ^#   /etc/login.defs
+
+案例：别名
+[root@boy ~]# alias  byebye='poweroff'
+
+
+
+

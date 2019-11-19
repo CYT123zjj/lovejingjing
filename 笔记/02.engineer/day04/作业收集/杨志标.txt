@@ -1,0 +1,91 @@
+案例练习,准备:
+            rht-vmctl  reset  classroom
+            rht-vmctl  reset  server
+	        rht-vmctl  reset  desktop
+######################################################
+
+案例1：实现的防火墙配置
+  1）修改虚拟机 server0防火墙配置，将默认区域修改为trusted
+firewall-cmd --set-default-zone=trusted
+
+  2）修改虚拟机 desktop0防火墙配置，将默认区域修改为trusted
+firewall-cmd --set-default-zone=trusted
+
+
+案例2:配置nfs文件夹共享，防火墙默认区域设置为trusted
+  在 server0 上发布共享文件夹
+  1）搭建nfs共享，实现共享本机/public
+mkdir /public
+rpm -q nfs-utils
+nfs-utils-1.3.0-0.el7.x86_64
+
+  2）共享给所有人可以访问，并且具备只读权限
+cat /etc/exports
+/public *(ro)
+systemctl restart nfs-server
+
+
+  在 desktop0 上访问共享文件夹
+  1）访问 server0 上发布共享/public,
+mkdir /mnt/test
+mount 172.25.0.11:/public /mnt/test/
+
+  2）实现开机自动挂载到/mnt/test
+vim /etc/fstab
+172.25.0.11:/public /mnt/test nfs defaults,_netdev 0 0
+
+
+案例3:为虚拟机 server 配置以下虚拟Web主机
+- 实现三个网站的部署
+- 实现客户端访问server0.example.com网页内容为 卖女孩的小火柴
+- 实现客户端访问www0.example.com网页内容为  奔跑吧骆驼
+- 实现客户端访问webapp0.example.com网页内容为 20里春风不如你
+
+***案例3答案:***
+yum -y install httpd
+vim /etc/httpd/conf.d/nsd.conf
+<VirtualHost *:80>
+ ServerName server0.example.com
+ DocumentRoot /var/www/xiaohuochai
+</VirtualHost>
+
+<VirtualHost *:80>
+ ServerName www0.example.com
+ DocumentRoot /var/www/luotuo
+</VirtualHost>
+
+<VirtualHost *:80>
+ ServerName webapp0.example.com
+ DocumentRoot /var/www/buruni
+</VirtualHost>
+
+mkdir /var/www/xiaohuochai /var/www/luotuo /var/www/buruni
+
+echo '卖女孩的小火柴' > /var/www/xiaohuochai/index.html
+echo '奔跑吧骆驼' > /var/www/luotuo/index.html
+echo '20里春风不如你' > /var/www/buruni/index.html
+
+systemctl restart httpd
+
+
+
+案例4:为虚拟机 server 使用自定Web根目录,设置SELinux为宽松模式
+调整 Web 站点 http://server0.example.com 的网页目录，要求如下：
+setenforce 0
+
+1）新建目录 /webroot，作为此站点新的网页目录
+mkdir /webroot
+vim /etc/httpd/conf.d/nsd.conf
+<VirtualHost *:80>
+ ServerName server0.example.com
+ DocumentRoot /webroot
+</VirtualHost>
+
+2）确保站点 http://server0.example.com  仍然可访问
+vim /etc/httpd/conf.d/webroot.conf
+<Directory "/webroot">
+    Require all granted
+</Directory>
+systemctl restart httpd
+
+

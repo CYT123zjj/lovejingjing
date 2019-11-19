@@ -1,0 +1,226 @@
+案例练习,准备:
+            rht-vmctl  reset  classroom
+            rht-vmctl  reset  server
+	        rht-vmctl  reset  desktop
+######################################################
+
+案例1:为虚拟机 server 配置以下永久的静态地址参数
+– 主机名:server0.example.com
+	[root@server0 ~]# nmtui ------>在nmtui界面内编辑hostname
+	[root@server0 ~]# hostname
+	server0.example.com
+
+– IP地址:172.25.0.132
+– 子网掩码:255.255.255.0
+	[root@server0 ~]# vim /etc/sysconfig/network-scripts/ifcfg-eth0
+	修改里面以下配置文件的内容:
+					BOOTPROTO=static
+					IPADDR=172.25.0.132
+					PREFIX0=24
+					保存退出
+	[root@server0 ~]# systemctl restart network
+
+
+#################################################
+案例练习,准备:
+            rht-vmctl  reset  classroom
+            rht-vmctl  reset  server
+	        rht-vmctl  reset  desktop
+#################################################
+
+案例2：复制、粘贴、移动
+ 以root用户新建/example/目录，在此目录下新建nsd.txt文件，并进一步完成下列操作
+
+ 1）将“I love Study”写入到文件nsd.txt
+ 	[root@server0 ~]# mkdir /example
+	[root@server0 ~]# vim /example/nsd.txt
+  
+ 2）将nsd.txt重命名为mylove.txt
+ 	[root@server0 ~]# mv /example/nsd.txt /example/mylove.txt
+ 
+ 3）将/etc/passwd、/boot、/etc/group同时拷贝到/example/目录下
+ 	[root@server0 ~]# cp -r /etc/passwd /boot /etc/group /example/
+ 
+ 4）将ifconfig命令的前两行内容，追加写入mylove.txt
+ 	[root@server0 ~]# ifconfig | head -2 >> /example/mylove.txt
+ 
+ 5）将/etc/passwd，拷贝到/example/目录下
+ 	[root@server0 ~]# cp -r /etc/passwd /example/
+ 
+ 6）将DNS永久配置文件/etc/resolv.conf，拷贝到/example/目录下
+ 	[root@server0 ~]# cp -r /etc/resolv.conf /example/
+
+ 7）将开机自动挂载配置文件，拷贝到/example/目录下
+ 	[root@server0 ~]# cp -r /etc/fstab /example/
+
+
+案例3:在server上操作,（MBR分区模式）规划分区
+ 添加一块80G的硬盘并规划分区：
+   划分2个10G的主分区；1个12G的主分区;1个20G的逻辑分区。
+   	[root@server0 ~]# lsblk
+	NAME   MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
+	vda    253:0    0  10G  0 disk 
+	└─vda1 253:1    0  10G  0 part /
+	vdb    253:16   0  10G  0 disk 
+	vdc    253:32   0  80G  0 disk 
+	[root@server0 ~]# ls /dev/vdc
+	[root@server0 ~]# fdisk /dev/vdc------>磁盘分区划分
+	[root@server0 ~]# lsblk
+	NAME   MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
+	vda    253:0    0  10G  0 disk 
+	└─vda1 253:1    0  10G  0 part /
+	vdb    253:16   0  10G  0 disk 
+	vdc    253:32   0  80G  0 disk 
+	├─vdc1 253:33   0  10G  0 part 
+	├─vdc2 253:34   0  10G  0 part 
+	├─vdc3 253:35   0  12G  0 part 
+	├─vdc4 253:36   0   1K  0 part 
+	└─vdc5 253:37   0  20G  0 part 
+
+
+案例4:在server上操作,分区使用
+
+1、案例3中新添加80G硬盘的第一个逻辑分区
+– 格式化成xfs文件系统，实现该分区开机自动挂载，挂载点为/mnt/xfs
+	[root@server0 ~]# mkfs.xfs /dev/vdc5
+	[root@server0 ~]# blkid /dev/vdc5
+	[root@server0 ~]# mkdir /mnt/xfs
+	[root@server0 ~]# mount /dev/vdc5 /mnt/xfs
+	[root@server0 ~]# df -h
+	...
+	/dev/vdc5        20G   33M   20G    1% /mnt/xfs
+	[root@server0 ~]# vim /etc/fstab ----->在/etc/fstab内添加以下命令
+	/dev/vdc5       /mnt/xfs        xfs     defaults        0       0
+	[root@server0 ~]# mount -a
+
+
+2、案例3中新添加80G硬盘的第一个主分区
+– 完成开机自动挂载，挂载点/mnt/mypart,文件系统为ext4
+	[root@server0 ~]# mkfs.ext4 /dev/vdc1
+	[root@server0 ~]# blkid /dev/vdc1
+	[root@server0 ~]# mkdir /mnt/mypart
+	[root@server0 ~]# mount /dev/vdc1 /mnt/mypart/
+	[root@server0 ~]# df -h
+	...
+	/dev/vdc1       9.8G   37M  9.2G    1% /mnt/mypart
+	[root@server0 ~]# vim /etc/fstab ----->在/etc/fstab内添加以下命令
+	/dev/vdc1       /mnt/mypart     ext4    defaults        0       0
+	[root@server0 ~]# mount -a
+
+
+案例5:指定yum软件源
+为 虚拟机server0 指定可用的 yum 软件源
+– YUM软件库的地址为 http://classroom.example.com/content/rhel7.0/x86_64/dvd
+	[root@server0 ~]# rm -rf /etc/yum.repos.d/*
+	[root@server0 ~]# vim /etc/yum.repos.d/server0.repo---->在/etc/yum.repos.d/server0.repo内修改以下配置
+	baseurl=http://classroom.example.com/content/rhel7.0/x86_64/dvd/
+
+
+– 将此配置为虚拟机 server0 的默认软件仓库
+	[root@server0 ~]# vim /etc/yum.repos.d/server0.repo---->在/etc/yum.repos.d/server0.repo内修改以下配置
+	[server0]
+	name=server0.example.com
+	baseurl=http://classroom.example.com/content/rhel7.0/x86_64/dvd/
+	enabled=1
+	gpgcheck=0
+
+
+– 确认可用的仓库列表
+	[root@server0 ~]# yum repolist 
+	
+– 利用yum仓库安装system-config-kickstart 
+	[root@server0 ~]# yum -y install system-config-kickstart
+
+– 利用yum仓库安装xeyes
+	[root@server0 ~]# yum -y install xeyes
+
+– 运行xeyes命令查看效果
+	[root@server0 ~]# xeyes
+
+案例6: vim文本编辑器练习，命令模式下的基本操作（重点知识）
+
+ 1）将/etc/passwd的前20行，写入到文件/opt/pass20.txt 
+ 	[root@server0 ~]# touch /opt/pass20.txt
+	[root@server0 ~]# head -20 /etc/passwd > /opt/pass20.txt
+ 
+ 2）将/etc/shadow的前10行,追加写入到文件/opt/pass20.txt 
+ 	[root@server0 ~]# head -10 /etc/shadow >> /opt/pass20.txt 
+
+ 2）利用/opt/pass20.txt，进项如下操作：
+    – 命令模式下移动光标：键盘上下左右键、Home键、End键
+    	[root@server0 ~]# vim /opt/pass20.txt 
+    	上下左右键为光标移动到内容上下左右的单个字符
+    	home键光标移动到本行内容的开头第一个字符
+    	end键光标移动到本行内容的行尾最后一个字符
+    
+    – 命令模式下行间跳转：到全文的第一行（1G或gg）、到全文的最后一行（G）、到全文的第10行（10G）
+    	[root@server0 ~]# vim /opt/pass20.txt 
+    	  光标到全文第一行(gg或1G):1 root:x:0:0:root:/root:/bin/bash
+    	  光标到全文最后一行(G): 30 operator:*:16141:0:99999:7:::
+	  光标到全文最后一行(G): 10 operator:x:11:0:operator:/root:/sbin/nologin
+
+    – 命令模式下复制、粘贴：
+    	[root@server0 ~]# vim /opt/pass20.txt 
+    	 复制1行（yy）、复制3行（3yy）
+    	 yy:
+    	 3yy:复制了 3 行                                                   35,0-1       底端
+
+    	 
+    	 粘贴到当前行之后（小写p）
+	 p:31 
+	   32 root:x:0:0:root:/root:/bin/bash
+ 	    33 
+ 	   34 root:x:0:0:root:/root:/bin/bash
+ 	   35 bin:x:1:1:bin:/bin:/sbin/nologin
+  	   36 daemon:x:2:2:daemon:/sbin:/sbin/nologin
+                                                              			36,1         底端
+
+    – 命令模式下删除：
+    	 删除单个字符（x）
+    	 [root@server0 ~]# vim /opt/pass20.txt 
+    	  x:36 daemon:x:2:2:daemon:/sbin:/sbin/nologi
+
+    	 删除到行首（d^）、删除到行尾（d$）
+    	 [root@server0 ~]# vim /opt/pass20.txt 
+    	  d^:35 
+	  d$:36 i
+
+    	 删除1行（dd）、删除3行（3dd）
+    	 [root@server0 ~]# vim /opt/pass20.txt 
+        dd:
+        3dd:少了 3 行                                                        33,1         底端
+    
+    – 命令模式下查找关键词： 
+    	 搜索（/word）切换结果（n、N）
+    	 [root@server0 ~]# vim /opt/pass20.txt 
+	  /word:word
+		root:x:0:0:root:/root:/bin/bash/word
+		
+	  n.N:root:x:0:0:root:/root:/bin/bash/word
+		word
+		word
+
+    – 补充：在命令模式下大写的C，可以删除光标之后，并且进入输入模式
+    	[root@server0 ~]# vim /opt/pass20.txt 
+    	 C:	按C键后直接从命令模式切换到插入模式
+		-- 插入 --                                                       35,1         底端
+	
+    	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

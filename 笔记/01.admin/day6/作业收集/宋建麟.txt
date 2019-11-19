@@ -1,0 +1,80 @@
+案例1:为虚拟机 server 配置以下永久的静态地址参数
+[root@server0 ~]# nmtui
+[root@server0 ~]# mkdir    /example
+[root@server0 ~]# touch  /example/nsd.txt
+[root@server0 ~]# echo     I love Study    >> /example/nsd.txt
+[root@server0 ~]# mv    /example/nsd.txt    /example/mylove.txt
+[root@server0 ~]# cp   -r    /etc/passwd   /boot   /etc/group   /example
+[root@server0 ~]# ls  /example
+boot  group  mylove.txt  passwd
+[root@server0 ~]# echo  |  ifconfig |  head  -2 >>  /example/mylove.txt
+[root@server0 ~]# \cp -r  /etc/passwd      /example
+[root@server0 ~]# cp    /etc/resolv.conf    /example
+[root@server0 ~]# cp    /etc/fstab    /example
+
+
+
+案例3:在server上操作,（MBR分区模式）规划分区
+[root@server0 ~]# lsblk
+NAME   MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
+vda    253:0    0  10G  0 disk 
+└─vda1 253:1    0  10G  0 part /
+vdb    253:16   0  10G  0 disk 
+vdc    253:32   0  80G  0 disk 
+├─vdc1 253:33   0  10G  0 part /mnt/mypart
+├─vdc2 253:34   0  10G  0 part 
+├─vdc3 253:35   0  12G  0 part 
+├─vdc4 253:36   0   1K  0 part 
+└─vdc5 253:37   0  20G  0 part /mnt/xfs
+[root@server0 ~]# xeye
+
+
+
+案例4:在server上操作,分区使用
+[root@server0 ~]# mkfs.xfs /dev/vdc5
+[root@server0 ~]# blkid /dev/vdc5
+[root@server0 ~]# mkdir /mnt/xfs
+[root@server0 ~]# mount /dev/vdc5 /mnt/xfs
+[root@server0 ~]# df -h
+...
+/dev/vdc5        20G   33M   20G    1% /mnt/xfs
+[root@server0 ~]# vim /etc/fstab ----->在/etc/fstab内添加以下命令
+/dev/vdc5       /mnt/xfs        xfs     defaults        0       0
+[root@server0 ~]# mount -a
+[root@server0 ~]# mkfs.ext4 /dev/vdc1
+[root@server0 ~]# blkid /dev/vdc1
+[root@server0 ~]# mkdir /mnt/mypart
+[root@server0 ~]# mount /dev/vdc1 /mnt/mypart/
+[root@server0 ~]# df -h
+...
+/dev/vdc1       9.8G   37M  9.2G    1% /mnt/mypart
+[root@server0 ~]# vim /etc/fstab ----->在/etc/fstab内添加以下命令
+/dev/vdc1       /mnt/mypart     ext4    defaults        0       0
+[root@server0 ~]# mount -a
+
+案例5:指定yum软件源
+为 虚拟机server0 指定可用的 yum 软件源
+[root@server0 ~]# rm  -rf   /etc/yum.repos.d/*
+[root@server0 ~]# vim  /etc/yum.repos.d/abc.repo
+– 将此配置为虚拟机 server0 的默认软件仓库
+	[root@server0 ~]# vim /etc/yum.repos.d/server0.repo---->在/etc/yum.repos.d/server0.repo内修改以下配置
+	[server0]
+	name=server0.example.com
+	baseurl=http://classroom.example.com/content/rhel7.0/x86_64/dvd/
+	enabled=1
+	gpgcheck=0
+[root@server0 ~]# yum repolist 
+[root@server0 ~]# yum -y install system-config-kickstart
+[root@server0 ~]# yum -y install xeyes
+[root@server0 ~]# xeyes
+
+
+
+案例6: vim文本编辑器练习，命令模式下的基本操作（重点知识）
+	[root@server0 ~]# touch /opt/pass20.txt
+	[root@server0 ~]# head -20 /etc/passwd > /opt/pass20.txt
+ 	[root@server0 ~]# head -10 /etc/shadow >> /opt/pass20.txt 
+
+
+
+

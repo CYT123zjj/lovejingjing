@@ -1,0 +1,370 @@
+牛犇
+##################################################
+一  C/S结构
+     服务端与客户端
+
+二 Linux系统简介
+
+Linux是一种操作系统!!
+—— 曾经 被Microsoft 视为最大的威胁
+—— 而今 互联网领域的幕后老大
+
+• UNIX诞生,1970-1-1
+
+Linux的诞生
+• Linux之父,Linus Torwalds
+– 1991年10月,发布0.02版(第一个公开版)内核
+– 1994年03月,发布1.0版内核
+– 标准读音: 哩呐科斯
+
+Linux系统内核
+• 由Linus率领的内核项目团队统一发布
+– 内核作用:管理CPU/内存、驱动基本硬件、文件系统
+– 版本号:主版本.次版本.修订号
+
+       用户------>内核------>计算机硬件
+
+Linux发行版本                                       
+• 发行版的名称/版本由发行方决定
+– Red Hat Enterprise Linux（RHEL） 5/6/7
+– Suse Linux Enterprise 12
+– Debian Linux 7.8
+– Ubuntu Linux 14.10/15.04
+– ......
+
+• CentOS,社区企业操作系统
+– Community Enterprise Operating System
+– http://www.centos.org/
+
+#######################################################
+安装Linux系统
+
+鼠标回到真机=Ctrl+Alt
+软件包的选择：“带GUI的服务器”
+
+Linux目录结构：树型结构     一切皆文件（哲学理念）
+
+   / 根目录：所有数据存放的目录（Linux系统的起点）
+   路径：/nsd/abc/1.txt
+
+  利用  root用户，进行登陆系统   
+ root用户为Linux系统的管理员
+
+  /dev：存放设备（磁盘 键盘  鼠标  显示器   光驱设备 .....）相关的数据
+
+Linux磁盘表示
+• 名称规则
+ hd,表示IDE设备
+ sd,表示SCSI设备
+
+设备所在目录
+  /dev/sda(第一块SCSI接口的设备)
+  /dev/sdb(第二块SCSI接口的设备)
+
+  /dev/hda(第一块IDE接口的设备)
+
+Linux系统中第三块SCSI磁盘如何表示?    /dev/sdc
+
+####################################################
+命令行基本操作
+
+获取命令行界面
+• 虚拟控制台切换( Ctrl + Alt + Fn 组合键)
+– tty1:图形桌面
+– tty2~tty6:字符控制台
+
+开启图形界面命令行：鼠标右击-----》打开终端
+  字体变大：Ctrl  shift  +
+  字体变小：Ctrl  -
+
+命令行提示符：
+[当前系统登陆的用户名@主机名 当前所在位置的目录名]# 
+
+  以#结尾代表当前是超级管理员
+  以$结尾代表当前是普通用户
+
+######################################################
+
+查看及切换目录
+• pwd — Print Working Directory
+– 用途:查看当前所在的位置
+	
+• cd — Change Directory
+– 用途:切换工作目录
+– 格式:cd   [目标文件夹位置]
+
+• ls — List
+– 格式:ls [选项]... [目录或文件名]...
+
+
+[root@localhost ~]# pwd              #显示当前所在位置的路径
+[root@localhost ~]# cd   /           #切换到根目录下
+[root@localhost /]# pwd              #显示当前所在位置的路径
+[root@localhost /]# ls               #显示当前目录下内容
+
+[root@localhost /]# cd  /root       #切换到/root目录下
+[root@localhost ~]# pwd
+[root@localhost ~]# ls
+
+[root@localhost ~]# cd  /boot     #切换到/boot目录下
+[root@localhost boot]# pwd
+[root@localhost boot]# ls
+
+[root@localhost boot]# cd  /opt   #切换到/opt目录下
+[root@localhost opt]# pwd
+[root@localhost opt]# ls
+
+  黑色：文本文件
+  蓝色：目录
+##################################################
+[root@localhost ~]# ls  /boot
+
+ 绝对路径：以根目录开始的路径
+ 相对路径：以当前为参照的路径
+
+[root@localhost /]# cd /etc/pki/
+[root@localhost pki]# pwd
+[root@localhost pki]# ls
+[root@localhost pki]# cd  /etc/pki/CA    #绝对路径
+[root@localhost CA]# pwd
+
+[root@localhost CA]# cd /etc/pki/
+[root@localhost pki]# ls
+[root@localhost pki]# pwd
+[root@localhost pki]# cd   CA    #相对路径
+[root@localhost CA]# pwd
+
+.. 表示父目录（上一级目录）
+[root@localhost /]# cd /opt/rh/
+[root@localhost rh]# pwd
+[root@localhost rh]# cd  ..
+[root@localhost opt]# pwd
+[root@localhost opt]# cd ..
+[root@localhost /]# pwd
+[root@localhost /]# cd ..
+
+[root@localhost /]# cd  /opt/rh/
+[root@localhost rh]# cd  ../..
+[root@localhost /]# pwd
+
+[root@localhost /]# ls  /root
+[root@localhost /]# ls  /boot
+[root@localhost /]# ls  /opt
+[root@localhost /]# ls  /opt   /root
+
+
+查看文本文件内容:cat
+[root@localhost /]# cat /etc/redhat-release   #查看系统版本
+
+[root@localhost /]# cat /root/anaconda-ks.cfg
+[root@localhost /]# cat /etc/hosts
+[root@localhost /]# cat /etc/passwd
+[root@localhost /]# cat /etc/shadow
+[root@localhost /]# cat /etc/fstab
+
+真机查看CPU和内存
+• 真机列出CPU处理器信息
+[student@room9pc01 ~]$  lscpu
+.......
+CPU(s):                4   #CPU的核心数
+.......
+型号名称：        Intel(R) Core(TM) i5-4430S CPU @ 2.70GHz
+.......
+
+• 真机检查内存大小、空闲情况
+[student@room9pc01 ~]$  cat  /proc/meminfo
+MemTotal:       16330728 kB   #一共有多少内存
+
+
+查看及修改主机名：
+[root@localhost /]# hostname   #查看当前主机名     
+localhost.localdomain
+[root@localhost /]# hostname hahaxixihehelele  #修改主机名
+[root@localhost /]# hostname     #查看当前主机名
+hahaxixihehelele  
+[root@localhost /]# exit   #关闭当前的命令行终端
+
+开启一个新的命令行终端
+[root@hahaxixihehelele ~]# hostname A.tedu.cn  #修改主机名
+[root@hahaxixihehelele ~]# hostname    #查看当前主机名
+A.tedu.cn
+[root@hahaxixihehelele ~]# exit   #关闭当前的命令行终端
+
+开启一个新的命令行终端
+[root@A ~]#hostname
+
+查看IP地址信息： ifconfig
+
+eth0: 第一张网卡名称
+
+lo:回环测试网卡  永远是127.0.0.1  代表本机
+
+[root@A ~]# ifconfig
+[root@A ~]# ping 127.0.0.1
+ Ctrl + c ：终止当前正在运行的操作
+
+[root@A ~]# ifconfig eth0 192.168.1.1  #临时设置IP地址
+[root@A ~]# ifconfig 
+[root@A ~]# ping 192.168.1.1
+ Ctrl + c ：终止当前正在运行的操作
+
+
+
+#######################################################
+[root@A ~]# reboot  #重起操作系统
+
+[root@localhost ~]# hostname
+
+[root@localhost ~]# ifconfig 
+
+#######################################################
+配置网络
+• nmtui网络连接管理：主机名、IP地址、子网掩码、网关、DNS服务器地址
+
+[root@localhost ~]#  nmtui     #建议字体小一些
+设置系统主机名-->输入新的名字-->确定（回车）--> 确定（回车）
+
+[root@nsd ~]# hostname
+nsd.tedu.cn
+[root@nsd ~]# 
+修改IP地址与子网掩码　
+[root@nsd ~]#　nmtui
+　编辑连接 -->eth0-->编辑ipv4-->显示-->将自动修改手动
+　-->按空格　勾选　自动连接    　    #每次开机自动生效
+　-->按空格　勾选　对所有用户有效  
+
+
+激活配置
+[root@nsd ~]#　nmtui
+　启用连接 -->eth0-->敲回车　禁用-->敲回车　激活
+　最终eth0前面有一个＊代表激活状态
+
+[root@nsd ~]# ifconfig 
+
+#####################################################
+创建数据                                                                           
+[root@nsd ~]# mkdir  nsd01   #当前路径下创建目录
+[root@nsd ~]# pwd
+[root@nsd ~]# ls
+
+[root@nsd ~]# mkdir /opt/nsd02   #创建目录/opt/nsd02
+[root@nsd ~]# ls /opt/
+
+[root@nsd ~]# mkdir /root/nsd03  /opt/nsd04  #创建多个目录
+[root@nsd ~]# ls /root/
+
+[root@nsd ~]# ls /opt/
+
+[root@nsd ~]# touch /root/1.txt  #创建文本文件
+[root@nsd ~]# ls /root/
+#####################################################
+文本内容操作
+• less分屏阅读工具
+• 格式:less [选项] 文件名...
+– 优势:支持前后翻页
+• 基本交互操作
+– 按 / 键向后查找(n、N切换)
+
+[root@nsd ~]# less /etc/passwd
+   按上 下键进行滚动
+   输入 /a  全文搜索a
+   按 q 进行退出
+
+• head、tail 命令
+– 格式: head -n 数字 文件名
+      tail -n 数字 文件名
+
+[root@nsd ~]# head -2 /etc/passwd  #显示文件内容的头2行内容
+
+[root@nsd ~]# tail -1 /etc/passwd  #显示文件内容的最后1行
+
+[root@nsd ~]# head -12 /etc/passwd
+
+[root@nsd ~]# head /etc/passwd   #默认显示文件头10行
+[root@nsd ~]# tail  /etc/passwd   #默认显示文件尾10行
+
+
+• grep工具
+– 用途:输出包含指定字符串的行
+– 格式:grep  '查找条件'      目标文件
+
+[root@nsd ~]# grep  root  /etc/passwd 
+
+[root@nsd ~]# grep  sbin  /etc/passwd 
+
+######################################################
+vim文本编辑器                                                     
+三个模式：命令模式    插入模式    末行模式
+
+vim当文件不存的时候，会自动新建该文件
+
+[root@nsd ~]# vim /opt/haxi.txt
+
+      	命------i键    o键---------》插入模式（按Esc键回到命令模式）
+      	令
+      	模
+     	式------输入 :  ------------》末行模式（按Esc键回到命令模式）
+
+     末行模式  :wq   #保存并退出
+     末行模式  :q!   #强制不保存并退出
+  
+    i键：当前行的插入    o键：另起新的一行进行插入
+######################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

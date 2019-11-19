@@ -1,0 +1,135 @@
+案例练习,准备:
+            rht-vmctl  reset  classroom
+            rht-vmctl  reset  server
+	       rht-vmctl  reset  desktop
+######################################################
+
+mkdit
+案例1：chmod权限设置
+    1）以root用户新建/nsddir/目录，在该目录下新建文件readme.txt
+oot@nmtui ~]# mkdir /nsddir
+mkdir: 无法创建目录"/nsddir": 文件已存在
+[root@nmtui ~]# touch /nsddir/readme.txt
+[root@nmtui ~]# ls /nsddir
+readme.txt
+
+    2）使用户zhangsan能够在/nsddir/目录下创建/删除子目录
+oot@nmtui ~]# useradd zhangsan
+[root@nmtui ~]# chmod o+rw /nsddir/readme.txt
+[root@nmtui ~]# ls  -ld /nsddir
+drwxr-xr-x. 2 root root 24 10月  8 18:54 /nsddir
+[root@nmtui ~]# ls =ld /nsddir/readme.txt
+ls: 无法访问=ld: 没有那个文件或目录
+/nsddir/readme.txt
+[root@nmtui ~]# ls -ld /nsddir/readme.txt
+-rw-r--rw-. 1 root root 0 10月  8 19:00 /nsddir/readme.txt
+[root@nmtui ~]# 
+
+
+    3）使用户zhangsan能够修改/nsddir/readme.txt文件的容
+  
+ oot@nmtui ~]# useradd zhangsan
+[root@nmtui ~]# chmod o+rw /nsddir/readme.txt
+[root@nmtui ~]# ls  -ld /nsddir
+drwxr-xr-x. 2 root root 24 10月  8 18:54 /nsddir
+[root@nmtui ~]# ls =ld /nsddir/readme.txt
+ls: 无法访问=ld: 没有那个文件或目录
+/nsddir/readme.txt
+[root@nmtui ~]# ls -ld /nsddir/readme.txt
+-rw-r--rw-. 1 root root 0 10月  8 19:00 /nsddir/readme.txt
+[root@nmtui ~]# 
+
+
+案例2：chown归属设置
+    1）新建/tarena1目录
+	a）将属主设为gelin01，属组设为tarena组
+	b）使用户gelin01对此目录具有权限，其他人对此目录无任何权限
+[root@nmtui ~]# mkdir /tarena1
+[root@nmtui ~]# useradd gelin01
+[root@nmtui ~]# grouadd /tarena/
+bash: grouadd: 未找到命令...
+[root@nmtui ~]# grouadd tarena
+bash: grouadd: 未找到命令...
+[root@nmtui ~]# groupadd tarena
+groupadd：“tarena”组已存在
+[root@nmtui ~]# chown gelina1:tarena /tarena1
+chown: 无效的用户: "gelina1:tarena"
+[root@nmtui ~]# chown geli01:tarena /tarena1
+chown: 无效的用户: "geli01:tarena"
+[root@nmtui ~]# chown gelin01:tarena /tarena1
+[root@nmtui ~]# ls -ld /tarena1
+drwxr-xr-x. 2 gelin01 tarena 6 10月  8 19:13 /tarena1
+[root@nmtui ~]# 
+
+
+    2）使用户gelin02能进入、查看/tarena1文件夹（提示：将gelin02加入所属组）
+正在将用户“gelin02”加入到“tarena”组中
+[root@nmtui ~]# ls -ld /tarena1
+drwxr-xr-x. 2 gelin01 tarena 6 10月  8 19:13 /tarena1
+[root@nmtui ~]# ls -ld /tarena1
+drwxr-xr-x. 2 gelin01 tarena 6 10月  8 19:13 /tarena1
+[root@nmtui ~]# chom rwx=g /tarena1
+bash: chom: 未找到命令...
+[root@nmtui ~]# chomd rwx=g /tarena1
+bash: chomd: 未找到命令...
+相似命令是： 'chmod'
+[root@nmtui ~]# chmod rwx=g /tarena1
+chmod: 无效模式："rwx=g"
+Try 'chmod --help' for more information.
+[root@nmtui ~]# chmod g=rwx /tarena1
+[root@nmtui ~]# ls -ld /tarena1
+drwxrwxr-x. 2 gelin01 tarena 6 10月  8 19:13 /tarena1
+[root@nmtui ~]# ^C
+
+    3）新建/tarena2目录
+	a）将属组设为tarena
+[root@nmtui ~]# mkdir tarena2
+[root@nmtui ~]# chown :tarena /tarena1
+[root@nmtui ~]# ls -ld /tarena1
+drwxrwxr-x. 2 gelin01 tarena 6 10月  8 19:13 /tarena1
+
+   b）使tarena组的任何用户都能在此目录下创建、删除文件
+[root@nmtui ~]# mkdir /tarena2
+[root@nmtui ~]# chmod g=rwx /tarena2
+[root@nmtui ~]# ls
+anaconda-ks.cfg  echoIlov  nsd0556  sdin     公共  视频  文档  音乐
+backup.tar.bz2   nsd       nsd06    tarena2  模板  图片  下载  桌面
+[root@nmtui ~]# ls -ld /tarena2
+drwxrwxr-x. 2 root root 6 10月  8 20:39 /tarena2
+
+    4）新建/tarena/public目录
+	a）使任何用户对此目录都有rwx权限
+[root@nmtui ~]# setfacl -m u:zhangsan:--- /tarena2
+[root@nmtui ~]# ls
+anaconda-ks.cfg  echoIlov  nsd0556  sdin     公共  视频  文档  音乐
+backup.tar.bz2   nsd       nsd06    tarena2  模板  图片  下载  桌面
+[root@nmtui ~]# ls -ld /tarena2
+drwxrwxr-x+ 2 root root 6 10月  8 20:39 /tarena2
+[root@nmtui ~]# 
+
+	b）拒绝zhangsan进入此目录，对此目录无任何权限（提示：为zhangsan设置ACL策略为:---）
+
+[root@nmtui ~]# mkdir  /data
+[root@nmtui ~]# touch /data/twst.txt
+[root@nmtui ~]# chmod u=rwx,g=rwx,o=--- /data/test/txt
+chmod: 无法访问"/data/test/txt": 没有那个文件或目录
+[root@nmtui ~]# chmod u=rwx,g=rwx,o=--- /data/test/txt
+chmod: 无法访问"/data/test/txt": 没有那个文件或目录
+[root@nmtui ~]# chmod u=rwx,g=rwx,o=--- /data/test,txt
+chmod: 无法访问"/data/test,txt": 没有那个文件或目录
+[root@nmtui ~]# chmod u=rwx,g=rwx,o=--- /data/test.txt
+chmod: 无法访问"/data/test.txt": 没有那个文件或目录
+[root@nmtui ~]# chmod u=rwx,g=rwx,o=--- /data/test.txt
+chmod: 无法访问"/data/test.txt": 没有那个文件或目录
+[root@nmtui ~]# chmod u=rwx,g=rwx,o=--- /data/twst.txt
+[root@nmtui ~]# 
+
+案例3:权限设置
+	1、创建文件夹/data/test,设置目录的访问权限，使所有者和所属组具备读写执行的权限；其他人无任何权限。
+	
+        2、递归修改文件夹/data/test的归属使所有者为zhangsan，所属组为tarena。
+
+	3、请实现在test目录下，新建的所有子文件或目录的所属组都会是tarena。
+	4、为lisi创建ACL访问权限，使得lisi可以查看/etc/shadow文件
+
+

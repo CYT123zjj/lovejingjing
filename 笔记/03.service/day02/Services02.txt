@@ -1,0 +1,296 @@
+一、手动创建新的虚拟机nsd01
+      安装方式：光盘安装
+      内存：2048M
+      虚拟机名字：nsd01
+      网络类型：private1隔离网络
+     
+      软件包选择：带GUI的服务器
+      分区：自动分区
+      设置root密码，创建普通用户lisi
+########################################################
+二、虚拟机介绍                                             
+虚拟化概述
+• virtualization 资源管理
+– x个物理资源 ---> y个逻辑资源
+– 实现程度:完全、部分、硬件辅助(CPU)
+
+真机查看CPU是否支持虚拟化功能
+[student@room9pc01 ~]$ lscpu | grep vmx
+
+BIOS开启虚拟化功能
+
+• 虚拟化主要厂商及产品
+
+VMware VMware Workstation、vSphere
+Microsoft VirtualPC、Hyper-V
+RedHat KVM、RHEV
+Citrix Xen
+Oracle Oracle VM VirtualBox
+
+#####################################################
+三、配置虚拟机
+1.配置主机名：kvm.tedu.cn
+[root@localhost ~]# echo kvm.tedu.cn > /etc/hostname
+[root@localhost ~]# hostname kvm.tedu.cn
+
+2.配置eth0网卡的IP地址：192.168.4.100/24
+[root@localhost ~]# nmcli connection modify eth0 ipv4.method manual ipv4.addresses 192.168.4.100/24 connection.autoconnect yes
+[root@localhost ~]# nmcli connection up eth0 
+[root@localhost ~]# ifconfig | head -2
+
+3.修改防火墙默认区域为trusted
+[root@kvm ~]# firewall-cmd --set-default-zone=trusted 
+
+4.修改SELinux运行模式
+[root@kvm ~]# getenforce 
+Enforcing
+[root@kvm ~]# setenforce 0
+[root@kvm ~]# getenforce 
+Permissive
+[root@kvm ~]# vim /etc/selinux/config 
+SELINUX=permissive
+
+5.配置Yum仓库
+[root@kvm ~]# cd /etc/yum.repos.d/
+[root@kvm yum.repos.d]# mkdir repo
+[root@kvm yum.repos.d]# mv *.repo   repo
+[root@kvm yum.repos.d]# ls
+[root@kvm yum.repos.d]# vim  dvd.repo
+[nsd]
+name=my Yum
+baseurl=ftp://192.168.4.254/centos-1804
+enabled=1
+gpgcheck=0
+[root@kvm yum.repos.d]# yum repolist
+[root@kvm yum.repos.d]# yum -y install xeyes
+###################################################
+安装虚拟化服务器平台
+• 主要软件包
+– qemu-kvm :为 kvm 提供底层仿真支持                           
+– libvirt-daemon :libvirtd 守护进程,管理虚拟机
+– libvirt-client :用户端软件,提供客户端管理命令
+– libvirt-daemon-driver-qemu :libvirtd 连接 qemu 的驱动
+– virt-manager :图形管理工具
+
+[root@kvm /]# yum -y install qemu-kvm
+[root@kvm /]# yum -y install libvirt-daemon
+[root@kvm /]# yum -y install libvirt-client
+[root@kvm /]# yum -y install libvirt-daemon-driver-qemu
+[root@kvm /]# yum -y install virt-manager
+
+[student@room9pc01 ~]$ ssh -X  root@192.168.4.100
+root@192.168.4.100's password: 
+[root@kvm ~]# virt-manager   #显示虚拟系统图形管理器
+
+虚拟机服务 libvirtd    #默认随机自启动服务
+
+#####################################################
+virsh命令工具介绍
+• 提供管理各虚拟机的命令接口
+– 支持交互模式,查看/创建/停止/关闭 .. ..
+– 格式:virsh  控制指令    [虚拟机名称] [参数]
+
+
+• 列出虚拟机
+– virsh list [--all]
+• 查看KVM节点(服务器)信息
+– virsh nodeinfo
+• 查看指定虚拟机的信息
+– virsh dominfo 虚拟机名称
+• 设置指定虚拟机开机自启动
+– virsh autostart 虚拟机名称
+– virsh dominfo 虚拟机名称
+• 设置指定虚拟机开机不自启动
+– virsh autostart --disable  虚拟机名称
+– virsh dominfo 虚拟机名称
+• 运行|重启|关闭指定的虚拟机
+– virsh start或reboot或shutdown  虚拟机名称
+• 强制关闭指定的虚拟机
+– virsh destroy  虚拟机名称
+
+####################################################
+一台KVM虚拟机的组成
+
+– xml配置文件（虚拟机描述文件）:定义虚拟机的名称、UUID、CPU、内存、虚拟磁盘、网卡等各种参数设置
+[student@room9pc01 ~]$ ls /etc/libvirt/qemu
+
+
+– 磁盘镜像文件:保存虚拟机的操作系统及文档数据,
+镜像路径取决于xml配置文件中的定义
+[student@room9pc01 ~]$ ls /var/lib/libvirt/images/
+
+###################################################
+手动创建一台虚拟机
+1.创建一个新的磁盘镜像文件
+]$ cd /var/lib/libvirt/images/     #默认磁盘文件路径
+]$ du -sh .node_base.qcow2             #统计大小
+]$ cp .node_base.qcow2   stu01.qcow2
+]$ ls 
+]$ du -sh stu01.qcow2
+ 
+2.创建一个新的xml配置文件
+]$ virsh dumpxml nsd01   #查看nsd01虚拟机的xml配置文件
+
+]$ virsh dumpxml nsd01 > /etc/libvirt/qemu/stu01.xml
+]$ vim /etc/libvirt/qemu/stu01.xml
+
+   虚拟机名字：<name>stu01</name>
+   虚拟机UUID：删除uuid整行内容
+   虚拟机磁盘文件路径：
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='qcow2'/>
+      <source file='/var/lib/libvirt/images/stu01.qcow2'/>
+
+   虚拟机网卡mac地址：删除整行内容
+    <interface type='network'>
+      <mac address='52:54:00:d2:7b:ec'/>  #删除整行内容
+
+3.导入全新的虚拟机
+]$ virsh list --all
+]$ virsh define /etc/libvirt/qemu/stu01.xml  #导入虚拟机信息
+]$ virsh list --all
+
+]$ virsh start stu01  #开启虚拟机stu01 
+]$ virt-manager      #开启虚拟机图形界面
+
+######################################################
+虚拟机的删除                                                           
+]$ virsh  destroy  stu01    #关机
+]$ virsh  undefine  stu01   #取消定义
+]$ virsh  list  --all
+]$ rm -rf /var/lib/libvirt/images/stu01.qcow2 
+
+######################################################
+• 虚拟机的磁盘镜像文件格式
+	特点\类型	 	RAW 	QCOW2
+	KVM默认 		否 		是
+	I/O效率 		高 		较高
+	占用空间	 	大 		小
+	压缩 		不支持 	支持
+	后端盘复用 	不支持	 支持
+	快照 		不支持 	支持
+#######################################################
+手动创建一台虚拟机
+1.创建磁盘镜像文件
+]$ mkdir /home/student/kvmfile
+
+]$ cp /var/lib/libvirt/images/.node_base.qcow2  /home/student/kvmfile/stu02.qcow2
+
+]$ du -sh /home/student/kvmfile/stu02.qcow2
+
+2.创建xml配置文件
+]$ virsh dumpxml  nsd01 > /home/student/kvmfile/stu02.xml
+]$ vim  /home/student/kvmfile/stu02.xml
+   虚拟机名字：<name>stu02</name>
+   虚拟机UUID：删除uuid整行内容
+   虚拟机磁盘文件路径：
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='qcow2'/>
+      <source file='/home/student/kvmfile/stu02.qcow2'/>
+
+   虚拟机网卡mac地址：删除整行内容
+    <interface type='network'>
+      <mac address='52:54:00:d2:7b:ec'/>  #删除整行内容
+
+]$ virsh define /home/student/kvmfile/stu02.xml 
+]$ virsh list --all
+]$ virsh start stu02
+#######################################################
+手动创建一台虚拟机
+1.创建磁盘镜像文件
+]$ cp /var/lib/libvirt/images/.node_base.qcow2 /home/student/kvmfile/stu03.qcow2
+
+]$ ls /home/student/kvmfile/
+
+2.创建xml配置文件                                                                 
+– 编辑: virsh edit 虚拟机名     #导出  修改  导入   三合一命令
+[student@room9pc01 ~]$ virsh edit nsd01
+   虚拟机名字：<name>stu03</name>
+   虚拟机UUID：删除uuid整行内容
+   虚拟机磁盘文件路径：
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='qcow2'/>
+      <source file='/home/student/kvmfile/stu03.qcow2'/>
+
+   虚拟机网卡mac地址：删除整行内容
+    <interface type='network'>
+      <mac address='52:54:00:d2:7b:ec'/>  #删除整行内容
+
+[student@room9pc01 ~]$ virsh list --all
+[student@room9pc01 ~]$ virsh start stu03
+[student@room9pc01 ~]$ virsh list --all
+#######################################################
+
+快速产生虚拟机磁盘镜像文件
+COW技术原理
+• Copy On Write,写时复制
+– 直接映射原始盘（后端盘）的数据内容
+– 当原始盘（后端盘）的旧数据有修改时,在修改之前自动将旧数据存入前端盘
+– 对前端盘的修改不回写到原始盘（后端盘）
+– 原始盘（后端盘）不能修改
+
+
+• qemu-img 通过 -b 选项复用指定原始盘
+– qemu-img create -f qcow2 -b 原始盘    前端盘   前端盘大小
+手动创建虚拟机
+1.创建磁盘镜像文件
+]$ qemu-img create -f qcow2 -b /var/lib/libvirt/images/.node_base.qcow2  /home/student/kvmfile/nsd05.qcow2  10G
+
+]$ ls /home/student/kvmfile/
+]$ qemu-img info /home/student/kvmfile/nsd05.qcow2 #查看信息
+image: /home/student/kvmfile/nsd05.qcow2  #路径
+file format: qcow2                    #格式
+virtual size: 10G (10737418240 bytes)   #虚拟大小
+disk size: 2.8M                   #真实占用磁盘空间大小
+backing file: /var/lib/libvirt/images/.node_base.qcow2
+
+
+2.创建xml配置文件                                                                 
+– 编辑: virsh edit 虚拟机名     #导出  修改  导入   三合一命令
+[student@room9pc01 ~]$ virsh edit nsd01
+   虚拟机名字：<name>nsd05</name>
+   虚拟机UUID：删除uuid整行内容
+   虚拟机磁盘文件路径：
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='qcow2'/>
+      <source file='/home/student/kvmfile/nsd05.qcow2'/>
+
+   虚拟机网卡mac地址：删除整行内容
+    <interface type='network'>
+      <mac address='52:54:00:d2:7b:ec'/>  #删除整行内容
+[student@room9pc01 ~]$ virt-manager 
+
+#######################################################
+
+配置虚拟机系统有奇招
+• 使用 guestmount 工具
+– 支持离线挂载 raw、qcow2 格式虚拟机磁盘镜像文件
+– 可以在虚拟机关机的情况下,直接修改磁盘中的文档
+– 方便对虚拟机定制、修复、脚本维护
+!!! 需要注意 SELinux 机制的影响
+
+• 基本用法
+  guestmount -a 虚拟机磁盘镜像文件路径  -i /挂载点
+
+]# guestmount -a /var/lib/libvirt/images/nsd01.qcow2 -i  /mnt/
+
+常见报错信息：
+fuse: mountpoint is not empty
+fuse: if you are sure this is safe, use the 'nonempty' mount option
+libguestfs: error: fuse_mount: /mnt/: 成功
+
+[root@room9pc01 ~]# guestmount -o nonempty -a /var/lib/libvirt/images/nsd01.qcow2 -i  /mnt/
+
+[root@room9pc01 ~]# ls /mnt/
+
+#######################################################
+
+
+
+
+
+
+
+
+
+

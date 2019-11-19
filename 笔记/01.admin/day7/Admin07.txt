@@ -1,0 +1,334 @@
+图形添加一个80G的硬盘
+[root@server0 ~]# lsblk
+[root@server0 ~]# fdisk /dev/vdc #划分三个主分区，两个逻辑分区
+   p 查看分区表
+   n 创建主分区----->回车----->回车---->回车----->在last结束时 +10G
+   n 创建主分区----->回车----->回车---->回车----->在last结束时 +10G
+   n 创建主分区----->回车----->回车---->回车----->在last结束时 +10G
+   p 查看分区表
+   n 创建扩展分区 
+          ----->回车---->起始回车----->结束回车   将所有空间给扩展分区
+   p 查看分区表
+   n 创建逻辑分区----->起始回车------>结束+10G
+   n 创建逻辑分区----->起始回车------>结束+10G
+   p 查看分区表
+   w 保存并退出
+[root@server0 ~]# lsblk
+#######################################################
+逻辑卷
+   1.整合分散的空间    2.空间可以扩展
+
+逻辑卷建立：
+   将众多的物理卷（PV）组建成卷组（VG），再从卷组中划分出逻辑卷（LV）
+
+一、创建逻辑卷                                                   
+successfully 成功
+
+1.创建卷组
+命令格式：vgcreate  卷组名      设备路径.......
+
+[root@server0 ~]# vgcreate systemvg   /dev/vdb  /dev/vdc1
+
+[root@server0 ~]# pvs  #查看物理卷信息
+[root@server0 ~]# vgs  #查看卷组信息
+
+2.创建逻辑卷
+命令格式：lvcreate -L 逻辑卷大小  -n 逻辑卷名   卷组名
+
+[root@server0 ~]# vgs  #查看卷组信息
+[root@server0 ~]# lvcreate -L 16G -n mylv systemvg 
+  Logical volume "mylv" created
+
+[root@server0 ~]# lvs     #查看逻辑卷信息                                  
+[root@server0 ~]# vgs     #查看卷组信息   
+
+3.使用逻辑卷
+[root@server0 ~]# ls /dev/systemvg/mylv   #查看逻辑卷设备路径 
+[root@server0 ~]# ls -l /dev/systemvg/mylv
+
+[root@server0 ~]# mkfs.xfs /dev/systemvg/mylv  #格式化文件系统
+[root@server0 ~]# blkid /dev/systemvg/mylv
+
+[root@server0 ~]# vim /etc/fstab 
+/dev/systemvg/mylv   /nsd   xfs   defaults   0  0
+
+[root@server0 ~]# mkdir /nsd
+[root@server0 ~]# mount -a
+[root@server0 ~]# df -h
+
+#######################################################
+二、逻辑卷的扩展
+
+1.卷组有足够的剩余空间
+   1）扩展逻辑卷空间
+  [root@server0 ~]# vgs
+  [root@server0 ~]# lvs
+  [root@server0 ~]# lvextend -L 18G /dev/systemvg/mylv  
+  [root@server0 ~]# lvs
+  [root@server0 ~]# df -h
+
+   2）扩展文件系统
+         xfs文件系统：xfs_growfs 
+         ext4文件系统：resize2fs 
+  [root@server0 ~]# df -h
+  [root@server0 ~]# xfs_growfs /dev/systemvg/mylv  
+  [root@server0 ~]# df -h
+
+2.卷组没有足够的剩余空间              
+   1)扩展卷组空间
+  [root@server0 ~]# vgextend systemvg /dev/vdc2
+  [root@server0 ~]# vgs
+  [root@server0 ~]# vgextend systemvg /dev/vdc3
+  [root@server0 ~]# vgs
+   2）扩展逻辑卷空间
+  [root@server0 ~]# vgs
+  [root@server0 ~]# lvs
+  [root@server0 ~]# lvextend -L 25G /dev/systemvg/mylv  
+  [root@server0 ~]# lvs
+  [root@server0 ~]# df -h
+   3）扩展文件系统
+  [root@server0 ~]# df -h
+  [root@server0 ~]# xfs_growfs /dev/systemvg/mylv  
+  [root@server0 ~]# df -h
+######################################################
+补充：逻辑卷也可以支持缩小
+      xfs文件系统，不支持缩小
+      ext4文件系统，支持缩小
+######################################################
+卷组划分空间的单位：PE 默认大小 4M
+[root@server0 ~]# vgdisplay systemvg   #查看卷组的详细信息
+  PE Size               4.00 MiB
+
+
+ 请划分一个大小为250M的逻辑卷为lvredhat
+[root@server0 ~]# vgchange -s 1M systemvg   #修改PE大小
+  Volume group "systemvg" successfully changed
+[root@server0 ~]# vgdisplay systemvg    #显示卷组的详细信息
+  PE Size               1.00 MiB
+
+[root@server0 ~]# lvcreate -L 250M -n lvredhat systemvg 
+  Logical volume "lvtest" created
+[root@server0 ~]# lvs
+
+#####################################################
+• 创建卷组的时候设置PE大小
+– vgcreate -s PE大小 卷组名 空闲分区...
+
+• 创建逻辑卷的时候指定PE个数
+– lvcreate -l PE个数 -n 逻辑卷名 卷组名
+
+#####################################################
+逻辑卷的删除
+ 首先删除逻辑卷本身，然后再删除卷组，最后删除物理卷
+
+[root@server0 ~]# lvremove /dev/systemvg/lvredhat 
+Do you really want to remove active logical volume lvredhat? [y/n]: y
+  Logical volume "lvredhat" successfully removed
+[root@server0 ~]# lvs
+
+#####################################################
+
+find高级使用,查找数据所在的位置
+
+
+查找文件
+• 根据预设的条件递归查找对应的文件
+– find [目录] [条件1] [-a|-o] [条件2] ...
+– 常用条件表示:
+	-type 类型(f文件、d目录、l快捷方式)
+	-name "文档名称"
+	-size +|-文件大小(k、M、G)
+	-user 用户名
+	-mtime 根据文件修改时间
+
+#######################################################
+[root@server0 ~]# find /boot/  -type l       #查找是快捷方式
+/boot/grub/menu.lst
+[root@server0 ~]# ls /boot/grub/menu.lst 
+
+[root@server0 ~]# find /boot/  -type f   #查找是文本文件
+[root@server0 ~]# find /boot/  -type d   #查找是目录
+
+
+#################################################
+[root@server0 ~]# find  /boot/   -name   'v*'
+[root@server0 ~]# find /etc/ -name 'passwd'
+[root@server0 ~]# find /etc/ -name '*.conf'
+[root@server0 ~]# find /etc/ -name '*tab'
+
+[root@server0 ~]# touch /root/nsd01.txt
+[root@server0 ~]# touch /root/nsd02.txt
+[root@server0 ~]# mkdir /root/nsd19
+
+[root@server0 ~]# find /root/  -name 'nsd*'
+[root@server0 ~]# find /root/  -name 'nsd*'  -type f
+[root@server0 ~]# find /root/  -name 'nsd*'  -type d
+###################################################
+
+[root@server0 ~]# find /boot/ -size +10M   #查找大于10M
+[root@server0 ~]# find /boot/ -size -10M   #查找小于10M
+[root@server0 ~]# find /boot/ -size +1M    #查找大于1M
+
+[root@server0 ~]# find /  -user student  #查找所有者为student
+
+  /proc:反映内存的数据，不占用磁盘空间
+
+####################################################
+	-mtime 根据文件修改时间     都是过去时间
+	-mtime +10   #10天之前数据
+	-mtime -10   #最近10天之内数据
+
+[root@server0 ~]# find  /root/  -mtime -2
+
+[root@server0 ~]# find  /root/  -mtime +10
+
+[root@server0 ~]# find  /var/  -mtime +90
+
+#####################################################
+  find扩展使用
+  • 使用find命令的 -exec 操作
+  – find .. .. -exec 处理命令  {} \;
+    – 优势:以 {} 代替每一个结果,逐个处理,遇  \; 结束
+
+]# find /etc/  -name '*tab'
+]# find /etc/  -name '*tab' -exec  cp   {}  /opt  \;
+]# ls /opt/
+
+]# find /boot/ -size +10M
+]# find /boot/ -size +10M  -exec   cp   {}  /mnt/  \;
+]# ls /mnt/
+
+案例4:查找并处理文件                                              
+• 使用find命令完成以下任务
+– 找出所有用户 student 拥有的文件
+– 把它们拷贝到 /root/findfiles/ 文件夹中
+
+[root@server0 ~]# mkdir /root/findfiles
+
+[root@server0 ~]# find / -user student  -type f
+
+]# find   /  -user  student  -type f   -exec  cp {}  /root/findfiles/   \;
+
+]# ls -A /root/findfiles/
+
+######################################################
+grep 在文本文件内容中，过滤包含指定字符串的行
+
+[root@server0 ~]# grep root  /etc/passwd  #过滤包含root的行
+
+[root@server0 ~]# grep ^root /etc/passwd   #以root开头的行
+[root@server0 ~]# grep bash$ /etc/passwd   #以bash结尾的行
+
+[root@server0 ~]# grep -v root /etc/passwd  #过滤不包含root
+
+  匹配空行：^$
+[root@server0 ~]# cat /etc/default/useradd 
+[root@server0 ~]# grep ^$  /etc/default/useradd 
+[root@server0 ~]# grep -v ^$ /etc/default/useradd
+
+Linux大多数配置文件内容，以#开头行为注释行
+显示文件有效配置（去除注释行，去除空行）
+]# grep -v ^# /etc/login.defs 
+
+]# grep -v ^# /etc/login.defs | grep    -v ^$
+
+]# grep -v ^# /etc/login.defs | grep    -v ^$  > /opt/log.txt 
+
+]# cat /opt/log.txt
+####################################################
+NTP网络时间协议
+• Network Time Protocol
+– NTP服务器为客户机提供标准时间
+– NTP客户机需要与NTP服务器保持沟通
+
+NTP服务器:虚拟机classroom
+
+NTP客户机:虚拟机server,指定服务端位置
+1.安装chrony软件，与NTP服务器沟通的软件
+[root@server0 ~]# rpm -q chrony
+chrony-1.29.1-1.el7.x86_64
+
+2.修改配置文件
+[root@server0 ~]# vim /etc/chrony.conf 
+  #server 0.rhel.pool.ntp.org iburst
+  #server 1.rhel.pool.ntp.org iburst
+  #server 2.rhel.pool.ntp.org iburst
+  server classroom.example.com iburst   #指定服务器位置
+3.重新启动程序（重起服务）
+[root@server0 ~]# systemctl restart chronyd #重新启动服务
+[root@server0 ~]# systemctl enable chronyd  #设置开机自启动
+
+4.测试：                                                                 
+[root@server0 ~]# date
+[root@server0 ~]# date -s '2008-10-1  12:10:01'  #修改时间
+[root@server0 ~]# date
+[root@server0 ~]# systemctl restart chronyd
+[root@server0 ~]# date
+[root@server0 ~]# date
+
+########################################################
+Set UID
+• 附加在属主的 x 位上
+– 属主的权限标识会变为 s
+– 适用于可执行文件,Set UID可以让使用者具有文件属主的身份及部分权限
+
+[root@server0 ~]# /usr/bin/mkdir  /mnt/test01
+[root@server0 ~]# ls /mnt/
+
+[root@server0 ~]# cp /usr/bin/mkdir  /usr/bin/hahadir
+[root@server0 ~]# ls /usr/bin/hahadir
+
+[root@server0 ~]# /usr/bin/hahadir  /mnt/test02
+[root@server0 ~]# ls /mnt/
+
+[root@server0 ~]# chmod u+s /usr/bin/hahadir #赋予Set UID
+[root@server0 ~]# ls -l /usr/bin/hahadir
+
+[root@server0 ~]# su - student
+[student@server0 ~]$ /usr/bin/mkdir abc01
+[student@server0 ~]$ ls -l
+
+[student@server0 ~]$ /usr/bin/hahadir abc02
+[student@server0 ~]$ ls -l
+
+######################################################
+升级内核
+
+1.下载新的内核软件包
+[root@server0 ~]# wget http://classroom.example.com/content/rhel7.0/x86_64/errata/Packages/kernel-3.10.0-123.1.2.el7.x86_64.rpm
+
+[root@server0 ~]# ls
+
+2.安装内核的软件包
+]# uname -r   #查看内核版本
+
+]# rpm -ivh /root/kernel-3.10.0-123.1.2.el7.x86_64.rpm 
+   
+]# reboot    #重起系统
+
+
+[student@room9pc01 ~]$ gos    #重新远程管理
+
+[root@server0 ~]# uname -r    #查看内核版本 
+3.10.0-123.1.2.el7.x86_64
+[root@server0 ~]# 
+
+#####################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

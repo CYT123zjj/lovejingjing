@@ -1,0 +1,6 @@
+undo terminal debugging
+undo terminal monitor
+undo terminal trapping
+sys
+user-interface console 0
+idle-timeout0

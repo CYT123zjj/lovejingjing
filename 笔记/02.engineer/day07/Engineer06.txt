@@ -1,0 +1,284 @@
+开机时优先虚拟机classroom，所有的服务随机自启动
+
+真机：使用rht-vmctl辅助工具
+• 控制教学用虚拟机
+– 格式:rht-vmctl   控制指令     虚拟机名
+– 常用控制指令:
+]$ rht-vmctl reset classroom     #先重置资源服务器
+]$ rht-vmctl reset server
+]$ rht-vmctl reset desktop       #再重置练习虚拟机
+
+##########################################################
+基础邮件服务
+
+电子邮件通信
+• 电子邮件服务器的基本功能
+– 为用户提供电子邮箱存储空间(用户名@邮件域名)
+– 处理用户发出的邮件 —— 传递给收件服务器
+– 处理用户收到的邮件 —— 投递到邮箱
+
+ DNS服务器：虚拟机classroom
+           lisi@server0.example.com
+
+
+虚拟机server：
+1.安装postfix邮件软件
+[root@server0 ~]# yum -y install postfix
+[root@server0 ~]# rpm -q postfix
+
+2.修改配置文件
+[root@server0 ~]# vim /etc/postfix/main.cf
+ 末行模式 :set   nu    #开启行号功能
+ 99  myorigin = server0.example.com    #默认补全的域名后缀
+
+ 116 inet_interfaces = all    #本机所有的网络接口均提供邮件功能
+
+ 164 mydestination = server0.example.com   #判断为本域邮件的依据
+
+
+3.重起postfix服务
+[root@server0 ~]# systemctl restart postfix
+
+
+使用mail命令发信/收信
+• mail 发信操作                                                 
+– mail -s '邮件标题'     -r  发件人      收件人
+[root@server0 ~]# useradd yg
+[root@server0 ~]# useradd xln
+[root@server0 ~]# mail -s 'test01' -r yg  xln
+hahaxixihehelele
+.                     #输入   点 并进行回车  代表提交 
+EOT
+[root@server0 ~]# echo 'ABCD' | mail -s 'test02' -r   yg  xln
+
+• mail 收信操作
+– mail [-u 用户名]
+[root@server0 ~]# mail -u xln
+
+>N  1 yg@server0.example.c  Fri Oct 18 09:20  20/591   
+& 1    #输入邮件的编号回车
+
+
+##############################################################
+配置IPv6地址
+
+IPv6地址的组成
+
+• IPv4 地址表示
+– 32个二进制位,点分隔的十进制数
+– 例如:172.25.0.11、127.0.0.1
+
+• IPv6 地址表示
+– 128个二进制位,冒号分隔的十六进制数
+– 每段内连续的前置 0 可省略、连续的多个 : 可简化为 ::
+– 例如:
+   2003:ac18:0000:0000:0000:0000:0000:0305
+   2003:ac18::305/64
+
+]# nmcli connection modify 'System eth0' 
+    ipv6.method manual                                    
+    ipv6.addresses '2003:ac18::305/64'                   
+    connection.autoconnect yes
+
+]# nmcli connection up 'System eth0'
+]# ifconfig | head -4
+]# ping6 2003:ac18::305
+
+############################################################
+链路聚合的优势
+• team,聚合连接(也称为链路聚合)
+– 由多块网卡(team-slave)一起组建而成的虚拟网卡,即“组队”
+– 作用:热备份(activebackup)连接冗余
+
+                        eth0       eth1
+                  
+                            虚拟网卡：       dc01
+
+
+
+1.创建虚拟网卡team0，参考 man teamd.conf 全文搜索/example
+[root@server0 ~]# nmcli connection add type team     
+  ifname team0 con-name team0 autoconnect yes         
+  config '{"runner": {"name": "activebackup"}}'
+
+successfully 成功
+
+[root@server0 ~]# nmcli 连接网络配置  添加   类型   team
+    网卡名  team0   配置文件名 team0  每次开机自动启用  yes
+    工作方式    热备份方式  
+
+[root@server0 ~]# ifconfig    #查看team0网卡
+
+2.添加成员
+[root@server0 ~]# nmcli connection add type team-slave 
+ ifname eth1 con-name team0-1 autoconnect yes  master team0 
+
+[root@server0 ~]# nmcli connection add type team-slave 
+ ifname eth2 con-name team0-2 autoconnect yes  master team0 
+
+
+[root@server0 ~]# nmcli 连接网络设备   添加   类型  team-成员 
+ 网卡名 eth2 配置文件名  team0-2  开机自动连接   主设备为  team0 
+
+3.配置IP地址
+[root@server0 ~]# nmcli connection modify 'team0'      
+ ipv4.method manual ipv4.addresses '192.168.1.1/24'    
+ connection.autoconnect  yes
+
+[root@server0 ~]# nmcli connection up team0
+[root@server0 ~]# nmcli connection up team0-1
+[root@server0 ~]# nmcli connection up team0-2
+[root@server0 ~]# teamdctl team0 state    #专门查看team0信息的命令
+
+如果激活失败，删除所有配置重新再来
+[root@server0 ~]# nmcli connection delete team0
+[root@server0 ~]# nmcli connection delete team0-1
+[root@server0 ~]# nmcli connection delete team0-2
+
+#####################################################
+parted分区工具,专门用于划分gpt分区模式
+
+
+gpt分区模式：  128个主分区      支持最大空间 18EB
+                          1EB=1024PB
+                          1PB=1024TB
+
+[root@server0 ~]# parted /dev/vdb
+(parted) mktable gpt      #指定分区模式为gpt
+(parted) print            #输出分区表信息
+(parted) mkpart           #划分新的分区
+分区名称？  []? haha           #分区的名字为haha
+ 文件系统类型？  [ext2]? ext4   #分区的文件系统，可以随意写
+起始点？ 0            
+结束点？ 2G 
+忽略/Ignore/放弃/Cancel? Ignore   #忽略分区表占用的空间
+(parted) unit gb                 #使用gb作为单位显示
+(parted) print
+(parted) mkpart 
+分区名称？  []? haha 
+文件系统类型？  [ext2]? ext4
+起始点？ 2G
+结束点？ 4G   
+(parted)quit
+[root@server0 ~]# lsblk 
+
+
+[root@server0 ~]# mkfs.ext4 /dev/vdb1  #格式化文件系统
+[root@server0 ~]# blkid /dev/vdb1      #查看文件系统
+[root@server0 ~]# mkfs.ext4 /dev/vdb2
+[root@server0 ~]# blkid /dev/vdb2
+
+#####################################################
+虚拟机server：完成触发挂载autofs
+
+1.安装软件包autofs
+[root@server0 ~]# yum -y install autofs
+
+  /etc/auto.master   #主配置文件  监控目录
+  /etc/auto.misc     #触发挂载配置文件  挂载设备与挂载点
+
+[root@server0 /]# mkdir /nsd1909
+[root@server0 /]# ls /nsd1909
+[root@server0 /]# vim /etc/auto.master  #增加配置
+/nsd1909    /etc/dc.txt
+ 监控目录           挂载配置文件
+
+[root@server0 /]# cp /etc/auto.misc /etc/dc.txt
+[root@server0 /]# vim  /etc/dc.txt   #只保留一行配置
+haxi   -fstype=ext4     :/dev/vdb1
+挂载点      文件系统类型           设备
+
+[root@server0 /]# systemctl restart autofs
+[root@server0 /]# ls /nsd1909
+[root@server0 /]# cd /nsd1909/haxi/
+[root@server0 haxi]# pwd
+/nsd1909/haxi
+[root@server0 haxi]# df -h
+
+######################################################
+修改用户的家目录
+[root@server0 /]# useradd tom            
+[root@server0 /]# ls /home/
+
+[root@server0 /]# grep tom /etc/passwd
+
+[root@server0 /]# usermod -d /mnt/xixi  tom  #修改tom家目录
+[root@server0 /]# grep tom /etc/passwd
+[root@server0 /]# ls /mnt/
+
+[root@server0 /]# cp -r /home/tom/  /mnt/xixi
+[root@server0 /]# ls -A /mnt/xixi
+[root@server0 /]# ls -lA /mnt/xixi
+[root@server0 /]# chown -R tom:tom /mnt/xixi  #修改归属关系
+[root@server0 /]# ls -lA /mnt/xixi
+
+#######################################################
+ 利用数值的方式表示权限：
+      利用数值4表示 r读取权限
+      利用数值2表示 w写入权限
+      利用数值1表示 x执行权限
+
+   所有者权限为 rwx   所有的权限为 7
+   所属组权限为 r-x   所属组权限为 5
+
+[root@server0 /]# mkdir /nsd
+[root@server0 /]# ls -ld /nsd
+
+[root@server0 /]# chmod 700 /nsd
+[root@server0 /]# ls -ld /nsd
+
+[root@server0 /]# chmod 755 /nsd
+[root@server0 /]# ls -ld /nsd
+
+[root@server0 /]# chmod 007 /nsd
+[root@server0 /]# ls -ld /nsd
+
+[root@server0 /]# chmod 750 /nsd
+[root@server0 /]# ls -ld /nsd
+
+权限的掩码： umask 值
+  创建目录默认权限有关
+
+[root@server0 /]# umask        #查看权限掩码值 
+0022
+[root@server0 /]# umask 077    #修改权限掩码值 
+[root@server0 /]# umask        #查看权限掩码值 
+0077
+[root@server0 /]# mkdir /opt/nsd02
+[root@server0 /]# ls -ld /opt/nsd02
+
+[root@server0 /]# mkdir /opt/nsd03
+[root@server0 /]# ls -ld /opt/nsd03
+
+[root@server0 /]# mkdir /nsd04
+[root@server0 /]# ls -ld /nsd04
+[root@server0 /]# umask 022       #修改权限掩码值 
+[root@server0 /]# umask 
+0022
+######################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

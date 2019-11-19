@@ -1,0 +1,111 @@
+回顾
+正则表达式
+基本正则 ^ $  [abc]  [^]  .  *  \{n,m\}   \{n\}  \{n,\}  \(\)
+扩展正则+   ?    {n,m}   a|b|c   ()    \b
+
+sed 非交互式编辑文本
+前置命令  |  sed 选项  (定址符)指令 
+sed 选项  (定址符)指令   被处理的文档
+选项 :  -n  -r  -i
+指令: p   d   s
+==============================
+a行下添加    i行上添加   c替换整行
+--------------------------------------------------------------
+找到使用bash的用户,按照  用户名 --> 密码的方式显示
+#!/bin/bash
+n=`sed -n '/bash$/s/:.*//p' /etc/passwd`
+for i in $n  将找到的使用bash的用户名交给for循环
+do
+        p=`grep $i: /etc/shadow`  将名字与shadow对比
+        p1=${p#*:}   找到对应的行,掐头
+        p2=${p1%%:*}   去尾,得到纯粹的密码
+        echo "$i --> $p2"  输出最后结果
+done
+----------------------------------------------------------------
+awk 精确搜索文档
+用法:
+awk 选项  (条件)指令  被处理的文档
+前置指令 | awk 选项  (条件)指令 
+-----------------------------
+awk '{print}' test   输出所有
+awk '{print $2}' test   输出每行第2列
+awk '/hello/{print $2}' test   找到有hello的行,输出他的第2列
+awk的内置变量  $1  $2  $3.....   $0 所有列    NR行号   NF列号
+-----------------------------------  
+awk默认分隔符为空格,可以使用-F修改分隔符
+awk -F: '{print $1}' user   定义分隔符为冒号, 输出第一列
+awk -F[:/] '{print $10}' user    定义分隔符为冒号或者斜线, 输出第10列
+--------------------------------------
+awk -F: '{print $1"的解释器是"$7}' user   输出特定列,常量+变量
+ifconfig eth0 | awk '/RX p/{print "本机eth0的接收流量是"$5"字节"}'    获取网卡接收流量
+ifconfig eth0 | awk '/TX p/{print "本机eth0的发送流量是"$5"字节"}'		获取网卡发送流量
+----------------------------------------
+df -h | awk '/vda1/{print "当前主机跟分区剩余空间是"$4}'			 获取根分区剩余空间
+awk '/Failed/{print "入侵者的ip是"$11}' /var/log/secure 
+-------------------------------------------------
+awk的工作时机
+BEGIN任务   执行1次
+逐行任务      执行N次
+END任务       执行1次
+
+BEGIN{ }{ }END{ }
+
+awk 'BEGIN{指令} {指令} END{指令}'  文件
+
+awk 'BEGIN{print "ABCD"}{print}END{print NR}' user 
+
+tab键   \t  制表符
+
+awk -F: 'BEGIN{print "User\tUid\tHome"}{print $1"\t"$3"\t"$6 }END{print "总计 "NR" 行"}' user
+========================================
+awk处理条件
+1, 使用正则作为条件
+awk -F: '/^root/{print $1}' user  找以root开头的行,输出第1列
+awk -F: '/^root|^bin/{print $1}' user  找以root或者bin开头的行,输出第1列
+awk -F: '/^(root|bin)/{print $1}' user  同上
+
+awk -F: '$1~/root/{print $1}' user  找第一列包含root的行,并且输出第1列
+awk -F: '$1!~/root/{print $1}' user 第一列不包含root
+-------------------------
+2, 数字与字符串做条件   ==  !=  >  >=   <  <=
+awk -F: 'NR==1{print}' user   输出第1行
+awk -F: 'NR>2{print}' user 	  输出行号大于2的行
+awk -F: 'NR>=2{print}' user    输出行号大于等于2的行
+awk -F: '$1=="root"{print}' /etc/passwd 输出第1列是root的行
+awk -F: '$1~/root/{print}' /etc/passwd 输出第1列包含root的行
+awk -F: '$1~/oot/{print}' /etc/passwd 输出第1列包含oot的行
+awk -F: '$3>1000{print}' /etc/passwd 输出第三列大于1000的行
+--------------------------
+3, 使用逻辑符号    && 并且       || 或者
+awk 'NR>=2 && NR<=4{print}' user 输出2~4行
+awk 'NR<=1 || NR>4{print}' user  输出第1行,或者大于4的行
+awk -F: '$3>=1000 && $3<=1005' /etc/passwd  当任务只是print时可以省略{print}    
+
+输出所有普通用户的家目录与解释器
+	例如:   张三的家目录是XXX ,解释器是 XXX
+awk -F: '$3>=1000 && $3<=1100{print $1"的家目录是"$6",解释器是"$7 }' /etc/passwd
+--------------------------------
+4,运算
+awk 'BEGIN{x++;print x}'    把x+1   然后输出x的值
+awk 'BEGIN{x=8;print x+=2}'  定义变量x=8, 然后+2再输出结果
+awk 'BEGIN{x=8;x--;print x}' x定义好,然后减1,输出
+awk 'BEGIN{print 2+3}'   
+awk 'BEGIN{print 2*3}'
+awk 'BEGIN{print 2*3}'
+
+下课休息17:25回
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

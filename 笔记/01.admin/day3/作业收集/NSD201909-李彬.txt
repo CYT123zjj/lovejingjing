@@ -1,0 +1,153 @@
+
+案例：复制、删除、移动
+  1. 在目录/opt下创建一个子目录 nsd
+[root@L /]# mkdir /opt/nsd
+[root@L /]# ls /opt/
+ 
+  2. 在目录/opt/nsd/创建文件readme.txt,利用vim写入内容 I Love Linux
+[root@L /]# touch /opt/nsd/readme.txt
+[root@L /]# ls /opt/nsd/
+readme.txt
+[root@L /]# vim /opt/nsd/readme.txt 
+[root@L /]# cat /opt/nsd/readme.txt
+I Love Linux
+
+  3. 将/etc/passwd 和 /etc/resolv.conf同时拷贝到/opt/nsd目录下
+[root@L /]# cp -r /etc/passwd /etc/resolv.conf /opt/nsd/
+[root@L /]# ls /opt/nsd/
+passwd  readme.txt  resolv.conf
+
+  4. 将文件 /etc/redhat-release复制到 /root/ 下，同时 改名为 version.txt 
+[root@L /]# cp /etc/resolv.conf /root/version.txt
+[root@L /]# ls /root
+anaconda-ks.cfg       version.txt  模板  图片  下载  桌面
+initial-setup-ks.cfg  公共         视频  文档  音乐
+
+  5. 将文件 /root/version.txt 移动到/opt/nsd/目录下 
+[root@L /]# mv /root/version.txt /opt/nsd/
+[root@L /]# ls /opt/nsd/
+passwd  readme.txt  resolv.conf  version.txt
+
+  6. 将/home目录复制到/opt/nsd/目录下 
+[root@L /]# cp -r /home /opt/nsd/
+[root@L /]# ls /opt/nsd/
+home  passwd  readme.txt  resolv.conf  version.txt
+
+
+案例：复制、删除、移动
+  1. 在目录/mnt下创建一个子目录 abc 
+[root@L /]# mkdir /mnt/abc
+[root@L /]# ls /mnt/
+abc
+
+  2. 在目录/mnt/abc/创建文件readme.txt,利用vim写入内容 I Love Study
+[root@L /]# touch /mnt/abc/readme.txt
+[root@L /]# ls /mnt/abc/
+readme.txt
+[root@L /]# vim /mnt/abc/readme.txt 
+[root@L /]# cat /mnt/abc/readme.txt
+I Love Study
+
+  3. 将/etc/passwd 和 /etc/resolv.conf同时拷贝到/mnt/abc/目录下
+[root@L /]# cp -r /etc/passwd /etc/resolv.conf /mnt/abc/
+[root@L /]# ls /mnt/abc/
+passwd  readme.txt  resolv.conf
+
+  4. 将文件 /etc/redhat-release复制到 /mnt/ 下，同时 改名为 version.txt 
+[root@L /]# cp /etc/resolv.conf /mnt/version.txt
+[root@L /]# ls /mnt/
+abc  version.txt
+
+  5. 将文件  /mnt/version.txt 移动到/opt/nsd/目录下强制覆盖 
+[root@L /]# \mv /mnt/version.txt /opt/nsd/
+[root@L /]# ls /mnt
+abc
+
+  6. 将/boot目录复制到/mnt/abc/目录下 
+[root@L /]# cp -r /boot /mnt/abc/
+[root@L /]# ls /mnt/abc/
+boot  passwd  readme.txt  resolv.conf
+
+
+案例：ls命令练习
+  1. 查看根目录下内容
+[root@L /]# ls
+bin   dev  etc   lib    media  nsd  proc  run   srv  tmp  var
+boot  dvd  home  lib64  mnt    opt  root  sbin  sys  usr
+
+  2. 显示根目录本身详细属性  
+[root@L /]# ls -ld /
+dr-xr-xr-x. 19 root root 246 9月  29 15:51 /
+ 
+  3. 切换到/boot目录，显示当前目录内容的详细属性，并加上易读的容量单位
+[root@L /]# cd /boot
+[root@L boot]# ls -lh
+
+  4. 显示/root的全部内容，包括隐藏文档
+[root@L /]# ls -lA /root
+
+  5. 显示/bin/bash程序，详细属性
+[root@L /]# ls -l /bin/bash
+-rwxr-xr-x. 1 root root 964544 4月  11 2018 /bin/bash
+
+  6. 显示/dev/cdrom光驱设备，详细属性
+[root@L /]# ls -l /dev/cdrom 
+lrwxrwxrwx. 1 root root 3 9月  29 10:26 /dev/cdrom -> sr0
+
+案例：mount挂载
+  1. 在根目录下创建目录结构/centos/dvd
+[root@L /]# mkdir -p  /centos/dvd
+[root@L /]# ls /
+bin   centos  dvd  home  lib64  mnt  opt   root  sbin  sys  usr
+boot  dev     etc  lib   media  nsd  proc  run   srv   tmp  var
+[root@L /]# ls /centos/
+dvd
+
+  2. 利用图形将光盘文件CentOS7-1804.iso放入光驱设备中
+显示虚拟硬件详情------->IDE CDROM 1---->连接------>浏览----->选择iso--->选择CentOS7-1804.iso--->选择----->确定
+  3. 将光驱设备挂载到/centos/dvd目录，以/centos/dvd目录作为其访问点
+[root@L /]# mount /dev/cdrom /centos/dvd/ 
+mount: /dev/sr0 写保护，将以只读方式挂载
+[root@L /]# ls /centos/dvd/
+CentOS_BuildTag  GPL       LiveOS    RPM-GPG-KEY-CentOS-7
+EFI              images    Packages  RPM-GPG-KEY-CentOS-Testing-7
+EULA             isolinux  repodata  TRANS.TBL
+
+  4. 查看/centos/dvd/Packages目录内容
+[root@L /]# ls /centos/dvd/Packages/
+
+  5. 将/centos/dvd/Packages目录中以vsftpd开头的软件包，拷贝到/opt下
+[root@L /]# cp /centos/dvd/Packages/vsftpd* /opt
+[root@L /]# ls /opt
+nsd  vsftpd-3.0.2-22.el7.x86_64.rpm  vsftpd-sysvinit-3.0.2-22.el7.x86_64.rpm
+
+
+案例:虚拟机上操作,查找并提取文件内容
+    1.利用grep显示/etc/fstab文件中以UUID开头的信息
+[root@L /]# grep ^UUID /etc/fstab 
+UUID=0fa33e0e-1cb0-4149-ba26-c0fc3926b7bc /boot                   xfs     defaults        0 0
+
+    2.利用grep显示/etc/passwd以bash结尾的行
+[root@L /]# grep bash$ /etc/passwd 
+root:x:0:0:root:/root:/bin/bash
+lisi:x:1000:1000:lisi:/home/lisi:/bin/bash
+tom:x:1001:1001::/home/tom:/bin/bash
+harry:x:1002:1002::/home/harry:/bin/bash
+
+    3.利用grep显示/etc/login.defs 以#开头的行
+[root@L /]# grep ^# /etc/login.defs
+
+    4.利用grep显示/etc/login.defs 不要以#开头的行
+[root@L /]# grep -v ^# /etc/login.defs 
+
+
+案例：别名
+  1. 为虚拟机定义一个别名，执行byebye可以实现关闭系统
+[root@L /]# alias byebye='poweroff'
+
+  
+
+
+
+
+

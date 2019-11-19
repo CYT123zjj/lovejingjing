@@ -1,0 +1,77 @@
+案例1:在在 server0、desktop0 上操作
+– 将防火墙默认区域设置为trusted
+[root@server0 ~]# getenforce
+Enforcing
+[root@server0 ~]# setenforece 0
+[root@server0 ~]# getenforce
+Permissive
+[root@server0 ~]# vim    /etc/selinux/config
+[root@server0 ~]# firewall-cmd --set-default-zone=trusted
+success
+
+[root@desktop0 ~]# getenforce
+Enforcing
+[root@desktop0 ~]# setenforce 0
+[root@desktop0 ~]# getenforce
+Permissive
+[root@desktop0 ~]# vim  /etc/selinux/config
+[root@desktop0 ~]# firewall-cmd --set-defaulet-zone=trusted
+usage: see firewall-cmd man page
+firewall-cmd: error: unrecognized arguments: --set-defaulet-zone=trusted
+[root@desktop0 ~]# firewall-cmd --set-default-zone=trusted
+success
+
+
+案例2:指定yum软件源
+
+[root@desktop0 ~]# yum  -y   install  system-config-kickstart
+
+案例3:tar制作/释放归档压缩包（zcf、ztf、zxf、jcf、jtf、jxf、cf、tf）
+[root@server0 ~]# mkdir   /root/boothome
+[root@server0 ~]# mkdir   /root/usrsbin
+[root@server0 ~]# tar  -zcf   /mnt/boothome.tar.gz  /boot   /home
+tar: 从成员名中删除开头的“/”
+[root@server0 ~]# ls /mnt
+boothome.tar.gz
+[root@server0 ~]# tar   -tf    /mnt/boothome.tar.gz 
+[root@server0 ~]# tar  -xf  /mnt/boothome.tar.gz   -C   /root/boothome
+[root@server0 ~]# tar    -jcf  /mnt/usrsbin.tar.bz2    /usr/sbin
+tar: 从成员名中删除开头的“/”
+tar: 从硬连接目标中删除开头的“/”
+[root@server0 ~]# tar   -tf   /mnt/usrsbin.tar.bz2  
+[root@server0 ~]# tar   -xf   /mnt/usrsbin.tar.bz2    -C   /root/usrsbin/
+
+
+
+案例4:在server上操作，搭建mariadb数据库系统
+
+[root@desktop0 ~]# yum   install  mariadb
+[root@desktop0 ~]# yum   -y    install  mariadb-server
+[root@desktop0 ~]# systemctl  restart  mariadb
+
+案例5:在server上操作，配置一个数据库
+MariaDB [(none)]> create   database  nsd;
+MariaDB [(none)]> grant select on nsd1909.*  to lisi@localhost identified by '123';
+
+案例7:虚拟机 server0操作， /dev/vdb 上按以下要求建立分区：
+[root@server0 ~]# lsblk
+NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+vda    253:0    0   10G  0 disk 
+└─vda1 253:1    0   10G  0 part /
+vdb    253:16   0   10G  0 disk 
+├─vdb1 253:17   0    3G  0 part 
+├─vdb2 253:18   0  200M  0 part 
+├─vdb3 253:19   0  100M  0 part 
+├─vdb4 253:20   0    1K  0 part 
+├─vdb5 253:21   0  500M  0 part 
+└─vdb6 253:22   0    2G  0 part 
+
+
+
+
+
+
+
+
+
+

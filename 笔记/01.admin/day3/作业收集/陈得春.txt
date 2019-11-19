@@ -1,0 +1,80 @@
+
+案例：复制、删除、移动
+  1. 在目录/opt下创建一个子目录 nsd 
+[root@nsd ~]# mkdir /opt/nsd
+  2. 在目录/opt/nsd/创建文件readme.txt,利用vim写入内容 I Love Linux
+[root@nsd nsd]# touch readme.txt
+[root@nsd nsd]# vim readme.txt 
+[root@nsd nsd]# cat readme.txt 
+#!/bin/bash
+I Love Linux
+  3. 将/etc/passwd 和 /etc/resolv.conf同时拷贝到/opt/nsd目录下
+[root@nsd nsd]# cp /etc/passwd /etc/resolv.conf /opt/nsd/
+  4. 将文件 /etc/redhat-release复制到 /root/ 下，同时 改名为 version.txt
+ [root@nsd nsd]# cp /etc/redhat-release /root/version.txt 
+  5. 将文件 /root/version.txt 移动到/opt/nsd/目录下 
+[root@nsd nsd]# mv /root/version.txt  /opt/nsd/
+  6. 将/home目录复制到/opt/nsd/目录下 
+[root@nsd ~]# cp -r /home/ /opt/nsd/
+
+案例：复制、删除、移动
+  1. 在目录/mnt下创建一个子目录 abc 
+[root@nsd ~]# mkdir /mnt/abc
+  2. 在目录/mnt/abc/创建文件readme.txt,利用vim写入内容 I Love Study
+ [root@nsd abc]# touch /mnt/abc/readme.txt
+  3. 将/etc/passwd 和 /etc/resolv.conf同时拷贝到/mnt/abc/目录下
+[root@nsd ~]# cp /etc/passwd /etc/resolv.conf /mnt/abc/
+  4. 将文件 /etc/redhat-release复制到 /mnt/ 下，同时 改名为 version.txt 
+[root@nsd ~]# cp /etc/redhat-release /mnt/version.txt
+  5. 将文件  /mnt/version.txt 移动到/opt/nsd/目录下强制覆盖 
+[root@nsd ~]# \mv /mnt/version.txt /opt/nsd/
+  6. 将/boot目录复制到/mnt/abc/目录下 
+[root@nsd ~]# cp -r /boot/ /mnt/abc/
+
+
+案例：ls命令练习
+  1. 查看根目录下内容
+[root@nsd ~]# ls /
+  2. 显示根目录本身详细属性   
+[root@nsd ~]# ls -ld /
+  3. 切换到/boot目录，显示当前目录内容的详细属性，并加上易读的容量单位
+[root@nsd ~]# cd /boot/
+[root@nsd boot]# ls -ldh
+  4. 显示/root的全部内容，包括隐藏文档
+[root@nsd ~]# ls -A
+  5. 显示/bin/bash程序，详细属性
+[root@nsd ~]# ls /bin/bash -l
+  6. 显示/dev/cdrom光驱设备，详细属性
+[root@nsd ~]# ls /dev/cdrom -l
+
+案例：mount挂载
+  1. 在根目录下创建目录结构/centos/dvd
+[root@nsd ~]# mkdir -p /centos/dvd
+  2. 利用图形将光盘文件CentOS7-1804.iso放入光驱设备中
+#点击灯泡,找到IDE CDROM1 点击连接选择浏览,选中iso中CentOS7-1804.iso,然后确定
+  3. 将光驱设备挂载到/centos/dvd目录，以/centos/dvd目录作为其访问点
+[root@nsd ~]# mount /dev/cdrom /centos/dvd/
+  4. 查看/centos/dvd/Packages目录内容
+[root@nsd ~]# ls /centos/dvd/Packages/
+  5. 将/centos/dvd/Packages目录中以vsftpd开头的软件包，拷贝到/opt下
+   [root@nsd ~]# cp /centos/dvd/Packages/vsftpd* /opt/
+
+案例:虚拟机上操作,查找并提取文件内容
+    1.利用grep显示/etc/fstab文件中以UUID开头的信息
+[root@nsd ~]# grep ^UUID /etc/fstab 
+    2.利用grep显示/etc/passwd以bash结尾的行
+[root@nsd ~]# grep bash$ /etc/passwd
+    3.利用grep显示/etc/login.defs 以#开头的行
+[root@nsd ~]# grep ^# /etc/login.defs 
+    4.利用grep显示/etc/login.defs 不要以#开头的行
+[root@nsd ~]# grep -v '#' /etc/login.defs 
+
+
+案例：别名
+  1. 为虚拟机定义一个别名，执行byebye可以实现关闭系统
+  [root@nsd ~]# alias dyebye='poweroff'
+
+
+
+
+

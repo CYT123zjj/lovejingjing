@@ -1,0 +1,120 @@
+
+案例：复制、删除、移动
+  1. 在目录/opt下创建一个子目录 nsd 
+  [root@tyler ~]# mkdir /opt/nsd
+
+
+  2. 在目录/opt/nsd/创建文件readme.txt,利用vim写入内容 I Love Linux\
+   [root@tyler ~]# touch /opt/nsd/readme.txt
+   [root@tyler ~]# vim /opt/nsd/readme.txt
+   i
+   I Love Linux\
+   ESC
+    :
+   wq
+
+  3. 将/etc/passwd 和 /etc/resolv.conf同时拷贝到/opt/nsd目录下
+   [root@tyler ~]# cp /etc/resolv.conf /etc/passwd /opt/nsd/
+
+
+  4. 将文件 /etc/redhat-release复制到 /root/ 下，同时 改名为 version.txt 
+  [root@tyler ~]#  cp /etc/resolv.conf /root/version.txt
+
+
+  5. 将文件 /root/version.txt 移动到/opt/nsd/目录下 
+  [root@tyler ~]#  mv /root/version.txt  /opt/nsd/
+
+  6. 将/home目录复制到/opt/nsd/目录下 
+  [root@tyler ~]# cp -r /home /opt/nsd
+
+
+案例：复制、删除、移动
+  1. 在目录/mnt下创建一个子目录 abc 
+  [root@tyler ~]# mkdir /mnt/abc
+
+  2. 在目录/mnt/abc/创建文件readme.txt,利用vim写入内容 I Love Study
+  [root@tyler ~]# touch /mnt/abc/readme.txt
+  [root@tyler ~]# vim /mnt/abc/readme.txt
+  i 
+  I Love Study
+  ESC
+   :
+  wq
+
+  3. 将/etc/passwd 和 /etc/resolv.conf同时拷贝到/mnt/abc/目录下
+[root@tyler ~]# cp /etc/passwd /etc/resolv.conf /mnt/abc
+
+  4. 将文件 /etc/redhat-release复制到 /mnt/ 下，同时 改名为 version.txt 
+[root@tyler ~]# cp /etc/redhat-release  /mnt/version.txt
+
+  5. 将文件  /mnt/version.txt 移动到/opt/nsd/目录下强制覆盖 
+[root@tyler ~]# mv -f /mnt/version.txt  /opt/nsd/
+
+  6. 将/boot目录复制到/mnt/abc/目录下 
+[root@tyler ~]# cp -r  /boot /mnt/abc
+
+
+
+
+案例：ls命令练习
+  1. 查看根目录下内容
+    [root@tyler ~]# ls /
+
+
+  2. 显示根目录本身详细属性   
+    [root@tyler boot]# ls -ld /
+
+  3. 切换到/boot目录，显示当前目录内容的详细属性，并加上易读的容量单位
+   [root@tyler ~]# cd /boot
+   [root@tyler boot]# ls -lh .
+
+  4. 显示/root的全部内容，包括隐藏文档
+   [root@tyler boot]# ls -A /root
+ 
+  5. 显示/bin/bash程序，详细属性
+   [root@tyler boot]# ls -l /bin/bash
+  
+  6. 显示/dev/cdrom光驱设备，详细属性
+   [root@tyler boot]# ls -l /dev/cdrom 
+ 
+
+
+案例：mount挂载
+  1. 在根目录下创建目录结构/centos/dvd
+  [root@tyler ~]# mkdir -p /centos/dvd
+
+  2. 利用图形将光盘文件CentOS7-1804.iso放入光驱设备中
+  3. 将光驱设备挂载到/centos/dvd目录，以/centos/dvd目录作为其访问点
+  [root@tyler ~]# mount /iso/CentOS7-1804.iso  /centos/dvd
+
+  4. 查看/centos/dvd/Packages目录内容
+  [root@tyler ~]# ls  /centos/dvd/Packages
+
+  5. 将/centos/dvd/Packages目录中以vsftpd开头的软件包，拷贝到/opt下
+  [root@tyler ~]# cp  /centos/dvd/Packages/vsftpd*   /opt
+
+案例:虚拟机上操作,查找并提取文件内容
+    1.利用grep显示/etc/fstab文件中以UUID开头的信息
+    [root@tyler ~]# grep ^UUID /etc/fstab 
+
+    2.利用grep显示/etc/passwd以bash结尾的行
+    [root@tyler ~]# grep bash$ /etc/passwd
+
+    3.利用grep显示/etc/login.defs 以#开头的行
+    [root@tyler ~]# grep ^# /etc/login.defs 
+
+    4.利用grep显示/etc/login.defs 不要以#开头的行
+    [root@tyler ~]# grep -v ^# /etc/login.defs 
+
+
+
+
+案例：别名
+  1. 为虚拟机定义一个别名，执行byebye可以实现关闭系统
+  [root@tyler ~]# alias byebye='poweroff'
+  
+
+
+
+
+

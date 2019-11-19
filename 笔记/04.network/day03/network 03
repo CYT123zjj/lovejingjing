@@ -1,0 +1,63 @@
+回顾
+vlan  控制广播,增加安全,提高带宽利用率,降低延迟
+trunk  中继链路   交换机互联时使用
+access 接入链路   连接终端设备
+链路聚合 增加可靠
+路由器依靠路由表转发数据
+路由表获取方式: 1 直连路由  2,静态路由  3,默认路由 
+==========================================
+三层交换机=二层交换+三层路由转发
+----------------------
+使用三层交换机组建网络
+[Huawei]vlan batch 2 3
+[Huawei]interface G0/0/2
+[Huawei-GigabitEthernet0/0/2] port link-type access
+[Huawei-GigabitEthernet0/0/2] port default vlan 2
+[Huawei]interface G0/0/3
+[Huawei-GigabitEthernet0/0/2] port link-type access
+[Huawei-GigabitEthernet0/0/2] port default vlan 3
+
+虚拟接口,三层交换机承担网关任务时,需要在虚拟接口配置ip地址
+[Huawei]interface Vlanif 1  进入vlan1的虚拟接口
+[Huawei-Vlanif1]ip address 192.168.1.254 24  配置网关地址
+[Huawei]interface Vlanif 2
+[Huawei-Vlanif1]ip address 192.168.2.254 24
+[Huawei]interface Vlanif 3
+[Huawei-Vlanif1]ip address 192.168.3.254 24
+配置完之后 查询ip, 查询路由表 进行验证
+---------------------------------
+三层交换机接口配置ip思路
+1, 创建vlan
+2, 进入该vlan的虚拟接口并配置ip
+3, 将三层交换机的接口加入该vlan
+----------------------------------
+路由器配置
+ip route-static 192.168.1.0 24 192.168.4.1
+ip route-static 192.168.2.0 24 192.168.4.1
+ip route-static 192.168.3.0 24 192.168.4.1
+
+三层交换机配置
+ip route-static 192.168.5.0 24 192.168.4.2
+-------------------------------------------
+动态路由, 由某种动态路由协议来自主交流路由信息,配置大规模网络时比静态路由效率高
+使用动态路由思路:
+1,开启动态路由协议
+2,宣告直连网段
+
+ospf 开放式最短路径优先协议
+三层交换机配置: 
+[Huawei]ospf 1
+[Huawei-ospf-1]area 0
+[Huawei-ospf-1-area-0.0.0.0]network 192.168.1.0 0.0.0.255
+[Huawei-ospf-1-area-0.0.0.0]network 192.168.2.0 0.0.0.255
+[Huawei-ospf-1-area-0.0.0.0]network 192.168.3.0 0.0.0.255
+[Huawei-ospf-1-area-0.0.0.0]network 192.168.4.0 0.0.0.255
+路由器配置
+[Huawei]ospf 1
+[Huawei-ospf-1]area 0
+[Huawei-ospf-1-area-0.0.0.0]network 192.168.4.0 0.0.0.255
+[Huawei-ospf-1-area-0.0.0.0]network 192.168.5.0 0.0.0.255
+如果5.0网络属于外部网络,可以不宣告,三层交换机配置默认路由即可.
+
+
+

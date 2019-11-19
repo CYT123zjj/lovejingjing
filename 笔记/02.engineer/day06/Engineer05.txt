@@ -1,0 +1,343 @@
+开机时优先虚拟机classroom，所有的服务随机自启动
+
+真机：使用rht-vmctl辅助工具
+• 控制教学用虚拟机
+– 格式:rht-vmctl   控制指令     虚拟机名
+– 常用控制指令:
+]$ rht-vmctl reset classroom     #先重置资源服务器
+]$ rht-vmctl reset server
+]$ rht-vmctl reset desktop       #再重置练习虚拟机
+
+#####################################################
+
+环境准备1：修改防火墙默认的区域为trusted
+虚拟机server：
+[root@server0 ~]# firewall-cmd --set-default-zone=trusted
+ 
+虚拟机desktop：
+[root@desktop0 ~]# firewall-cmd --set-default-zone=trusted 
+
+#########################################################
+案例1:为虚拟机 server 配置以下虚拟Web主机
+- 实现三个网站的部署
+- 实现客户端访问server0.example.com网页内容为 卖女孩的小火柴
+- 实现客户端访问www0.example.com网页内容为  奔跑吧骆驼
+- 实现客户端访问webapp0.example.com网页内容为 20里春风不如你
+虚拟机server：
+[root@server0 ~]# yum -y install httpd
+[root@server0 ~]# vim /etc/httpd/conf.d/nsd01.conf   #建立调用配置文件
+<VirtualHost   *:80>
+  ServerName server0.example.com
+  DocumentRoot /var/www/abc01
+</VirtualHost>
+<VirtualHost  *:80>
+  ServerName www0.example.com
+  DocumentRoot /var/www/abc02
+</VirtualHost>
+<VirtualHost  *:80>
+  ServerName webapp0.example.com
+  DocumentRoot /var/www/abc03
+</VirtualHost>
+]# cd /var/www/
+]# mkdir abc01  abc02  abc03
+]# echo '<h1>卖女孩的小火柴' > /var/www/abc01/index.html
+]# echo '<h1>奔跑吧骆驼' > /var/www/abc02/index.html
+]# echo '<h1>20里春风不如你' > /var/www/abc03/index.html
+]# systemctl restart httpd
+#############################################################
+客户机地址限制
+• 使用 <Directory> 配置区段
+– 每个文件夹自动继承其父目录的ACL访问权限
+– 除非针对子目录有明确设置
+ <Directory 目录的绝对路径>
+   .. ..
+  Require all denied|granted
+  Require ip IP或网段地址 .. ..
+</Directory>
+
+
+
+案例1:配置网页内容访问
+在 Web 网站 http://server0.example.com 的
+DocumentRoot 目录下创建一个名为 private 的子目录,要求如下:
+
+1.查看网站 http://server0.example.com 的DocumentRoot 目录
+]# vim /etc/httpd/conf.d/nsd01.conf
+
+2.创建目录
+]# mkdir /var/www/abc01/private
+
+3.书写页面文件
+]# echo '<h1> wo shi  private' > /var/www/abc01/private/index.html
+
+]# firefox server0.example.com/private   #测试访问
+
+4.从虚拟机server0 上,任何人都可以浏览 private 的内容,    
+但是从其他系统不能访问这个目录的内容（仅本机可以访问）
+[root@server0 /]# vim /etc/httpd/conf/httpd.conf 
+[root@server0 /]# vim /etc/httpd/conf.d/nsd02.conf
+<Directory  /var/www/abc01/private>  #针对于那个目录进行访问控制
+    Require ip 172.25.0.11    #仅允许172.25.0.11访问
+</Directory>
+[root@server0 /]# systemctl  restart httpd
+
+5.测试访问
+虚拟机desktop：
+[root@desktop0 /]# firefox server0.example.com/private   #测试访问
+Forbidden
+
+You don't have permission to access /private/ on this server.
+
+############################################################
+案例2:使用自定Web根目录
+调整 Web 站点 http://server0.example.com 的网页目录,要求如下:
+
+1)新建目录 /webroot,作为此站点新的网页目录
+[root@server0 /]# mkdir /webroot
+[root@server0 /]# echo '<h1>wo shi webroot' > /webroot/index.html
+
+2)修改DocumentRoot路径
+[root@server0 /]# vim /etc/httpd/conf.d/nsd01.conf #修改配置
+<VirtualHost  *:80>
+  ServerName server0.example.com
+  DocumentRoot /webroot
+</VirtualHost>
+
+3)修改访问控制允许所有客户端访问
+[root@server0 /]# vim /etc/httpd/conf.d/nsd02.conf   #增加配置
+<Directory /webroot>
+    Require all granted   #允许所有客户端访问
+</Directory>
+
+4）重起httpd服务
+[root@server0 /]# systemctl restart httpd
+
+5)修改SELinux策略  安全上下文（文件或目录标签）                   
+[root@server0 /]# setenforce 1    #开启SELinux
+[root@server0 /]# getenforce      #查看SELinx模式
+Enforcing
+[root@server0 /]# ls -Zd /var/www/   #查看目录的安全上下文值
+[root@server0 /]# ls -Zd /webroot/   #查看目录的安全上下文值
+• 方式1:参照标准目录,重设新目录的属性
+– chcon [-R] --reference=模板目录      新目录
+
+[root@server0 /]# chcon -R --reference=/var/www  /webroot
+[root@server0 /]# ls -Zd /webroot
+
+
+#############################################################
+部署动态网站
+ 
+ 动态网站概述
+• 服务端的原始网页 ≠ 浏览器访问到的网页
+– 由Web服务软件接受请求,动态程序转后端模块处理
+– PHP网页、Python网页、JSP网页......
+
+静态网站的运行
+• 服务端的原始网页 = 浏览器访问到的网页
+– 由Web服务软件处理所有请求
+– 文本(txt/html)、图片(jpg/png)等静态资源
+
+
+虚拟机server：
+1.部署Python页面文件，新建一个动态站点(虚拟主机)
+– 站点名称为 webapp0.example.com
+]# cat /etc/httpd/conf.d/nsd01.conf  
+]# cd /var/www/abc03/
+]# wget http://classroom.example.com/pub/materials/webinfo.wsgi
+
+]# ls
+
+2.页面的跳转（页面的别名），方便客户端访问动态网站
+
+  格式：  Alias    网络路径     实际路径
+
+       Alias     /       /var/www/abc03/webinfo.wsgi
+
+   当客户端访问网页文件根目录时，将/var/www/abc03/webinfo.wsgi呈现
+
+[root@server0 abc03]# vim /etc/httpd/conf.d/nsd01.conf 
+<VirtualHost  *:80>
+  ServerName  webapp0.example.com
+  DocumentRoot /var/www/abc03
+  Alias  /   /var/www/abc03/webinfo.wsgi
+</VirtualHost>
+
+[root@server0 abc03]# systemctl restart httpd
+
+[root@server0 abc03]# firefox webapp0.example.com
+
+3.安装软件包，进行翻译Python页面代码
+[root@server0 /]# yum -y install mod_wsgi
+[root@server0 /]# vim /etc/httpd/conf.d/nsd01.conf
+<VirtualHost  *:80>
+  ServerName webapp0.example.com
+  DocumentRoot /var/www/abc03
+  WsgiScriptAlias /   /var/www/abc03/webinfo.wsgi
+</VirtualHost>
+[root@server0 ~]# systemctl restart httpd
+
+[root@server0 /]# firefox webapp0.example.com
+页面内容为：
+  Unix时间戳：自1970-1-1  0：0：0  到当前系统时间，所经历的秒数
+
+
+4.此虚拟主机侦听在端口8909
+[root@server0 /]# vim /etc/httpd/conf.d/nsd01.conf
+Listen 8909
+<VirtualHost  *:8909>
+  ServerName webapp0.example.com
+  DocumentRoot /var/www/abc03
+  WsgiScriptAlias /   /var/www/abc03/webinfo.wsgi
+</VirtualHost>
+
+5.修改SELinux策略 非默认端口的开放
+
+    https:安全的超文本传输协议  默认端口为443
+
+[root@server0 /]# semanage port -l | grep http
+[root@server0 /]# semanage port -a -t http_port_t  -p tcp 8909
+        -a:添加   -t：类型   -p：协议
+[root@server0 /]# systemctl restart httpd
+[root@server0 /]# firefox  webapp0.example.com:8909
+
+  端口的优先级较高
+
+#############################################################
+安全Web服务,实现https安全加密的通信
+
+PKI公钥基础设施
+• Public Key Infrastructure,公钥基础设施
+– 公钥:主要用来加密数据
+– 私钥:主要用来解密数据(与相应的公钥匹配)
+– 数字证书:证明拥有者的合法性/权威性(单位名称、
+有效期、公钥、颁发机构及签名、......)
+– Certificate Authority,数字证书授权中心:负责证书
+的申请/审核/颁发/鉴定/撤销等管理工作
+
+虚拟机classroom：数字证书授权中心
+
+虚拟机server：
+1.站点名称为 www0.example.com，构建安全的Web服务
+   安装软件包，支持https安全加密的通信
+[root@server0 /]# yum -y install mod_ssl
+[root@server0 /]# ls /etc/httpd/conf.d/ssl.conf   #查看生成的配置文件
+
+2.部署网站证书（营业执照）
+]# cd /etc/pki/tls/certs/   #存放证书的默认路径
+]# wget http://classroom.example.com/pub/tls/certs/server0.crt
+]# ls
+
+3.部署根证书（工商局的信息）
+]# cd /etc/pki/tls/certs/ 
+]# wget http://classroom.example.com/pub/example-ca.crt
+]# ls
+
+4.部署私钥（解密数据）
+]# cd /etc/pki/tls/private/
+]# wget http://classroom.example.com/pub/tls/private/server0.key
+]# ls
+
+5.修改配置文件
+[root@server0 ~]# vim /etc/httpd/conf.d/ssl.conf   
+  末行模式下  ：set  nu  #开启行号功能
+
+ 59  DocumentRoot "/var/www/abc02"
+ 60  ServerName www0.example.com:443
+
+指定网站的证书
+100 SSLCertificateFile  /etc/pki/tls/certs/server0.crt
+指定私钥文件
+107 SSLCertificateKeyFile /etc/pki/tls/private/server0.key
+指定根证书
+122 SSLCACertificateFile /etc/pki/tls/certs/example-ca.crt
+
+6.重起httpd服务
+[root@server0 /]# systemctl restart httpd
+
+7.验证：
+[root@server0 /]# firefox https://www0.example.com
+      我已了解可能的风险-----》添加例外------》确认安全例外
+
+##############################################################
+配置网络参数进阶
+方法一：nmtui
+
+方法二：非交互式配置
+
+一、配置永久主机名
+[root@server0 /]# echo A.tedu.cn > /etc/hostname
+[root@server0 /]# hostname
+A.tedu.cn
+[root@server0 /]# exit
+登出
+[student@room9pc01 ~]$ gos
+
+[root@A ~]# hostname
+A.tedu.cn
+[root@A ~]# 
+
+二、配置IP地址  子网掩码  网关地址  
+
+1.查看识别的网卡的名称
+[root@A ~]# nmcli connection show
+ 名称          
+System eth0 
+
+2.设置IP地址  子网掩码  网关地址  
+[root@A ~]# nmcli connection modify 'System eth0'     
+   ipv4.method manual                                   
+   ipv4.addresses '172.25.0.110/24  172.25.0.254'        
+   connection.autoconnect yes
+
+[root@A ~]# nmcli 连接网络配置   修改   '网卡名'
+   ipv4.方法  手工设置
+   ipv4.地址  'IP地址/子网掩码   网关地址' 
+     每次开机自动启用
+
+3.激活                                                                        
+[root@A ~]# nmcli connection up 'System eth0'
+
+[student@room9pc01 ~]$ ssh root@172.25.0.110
+[root@A ~]# ifconfig | head -2
+
+三、指定DNS服务器地址
+     教学环境的DNS服务器：172.25.254.254
+[root@A ~]# echo nameserver 172.25.254.254 > /etc/resolv.conf 
+[root@A ~]# cat /etc/resolv.conf
+nameserver 172.25.254.254
+ 
+[root@A ~]# nslookup www0.example.com   #测试域名解析
+
+############################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,118 @@
+回顾
+路由类别    1,直连路由 ,2静态路由  ,3默认路由 ,4动态路由
+传输层  端到端的传输
+tcp 可靠  效率低
+ftp21 http80 dns53 https443 ssh22 smtp25 ....
+syn ack fin
+面向连接  三次握手 syn--syn,ack--ack
+	       四次断开 fin--ack--fin--ack  
+udp 不可靠  效率高
+tftp69 dns53 ntp123
+无连接
+acl 访问控制列表
+基本acl 2000~2999 只对源地址限制
+高级acl 3000~3999 对源地址,目标地址,协议,端口限制
+deny    permit
+====================================
+应用层   http dns ftp
+传输层
+网络层
+数据链路层
+物理层
+-----------------------------
+ip4  42亿   ip6 
+nat  网络地址转换,将内部私有ip转换为合法的公有ip
+优点,节约公网地址,处理地址重叠,增加安全
+
+A 1~127
+B 128~191
+C 192~223
+
+私有ip地址范围
+A 10.0.0.0~10.255.255.255
+B 172.16.0.0~172.31.255.255
+C 192.168.0.0~192.168.255.255
+-------------------------------------
+静态转换      1对1    在服务器连接外网时使用,双向访问
+easy ip  多对1    通常在办公室多人上网的环境使用,单向访问
+---------------------------
+通过路由器配置nat,实现静态转换:
+[Huawei]interface GigabitEthernet 0/0/1
+[Huawei-GigabitEthernet0/0/1] ip address  100.0.0.1 8
+[Huawei]interface GigabitEthernet 0/0/0
+[Huawei-GigabitEthernet0/0/0] ip address  192.168.2.254 24
+[Huawei-GigabitEthernet0/0/1]nat static global 100.0.0.2 inside 192.168.2.1   进入外网接口,开启nat的静态转换,将100.0.0.2与2.1进行相互转换
+[Huawei-GigabitEthernet0/0/1]nat static global 100.0.0.3 inside 192.168.2.2   开启nat的静态转换,将100.0.0.3与2.2进行相互转换
+---------------------------------------
+
+undo  nat static global 100.0.0.2 inside 192.168.2.1    进入外网接口后,删除原有静态转换
+acl 2000
+rule permit source any   使用acl定义允许访问外部网络的主机
+in g0/0/1
+nat outbound 2000  使用nat允许acl列表中的主机访问外部
+----------------------------------------
+使用vrrp实现网络高可用
+vrrp  虚拟路由冗余协议
+环境准备:
+1,配置ip
+	三层交换机的接口无法直接配置ip,需要先创建vlan,在vlan的虚拟接口中配置ip,然后将接口加入vlan
+2,配置动态路由ospf
+	所有三层设备开启ospf,区域(area)设置为0,宣告自身直连网段
+最后pc1的网关临时使用  1.252 或者 1.253 检测是否可以全网互通
+3,配置vrrp
+[Huawei]interface Vlanif 1
+[Huawei-Vlanif1]vrrp vrid 1 virtual-ip 192.168.1.254
+4,查看结果
+display vrrp brief
+
+主   备份   虚拟
+
+vrrp 负载均衡
+
+sw1   vlan1  主    vlan2  备
+sw2   vlan1  备    vlan2  主
+
+sw1的配置:
+[Huawei]interface Vlanif 1
+[Huawei-Vlanif1]ip address 192.168.1.252 24
+[Huawei-Vlanif1]vrrp vrid 1 virtual-ip 192.168.1.254
+sw2的配置:
+[Huawei]interface Vlanif 1
+[Huawei-Vlanif1]ip address 192.168.1.253 24
+[Huawei-Vlanif1]vrrp vrid 1 virtual-ip 192.168.1.254
+[Huawei]interface Vlanif 2
+[Huawei-Vlanif2]ip address 192.168.2.253 24
+[Huawei-Vlanif2]vrrp vrid 2 virtual-ip 192.168.2.254
+sw1的配置:
+[Huawei]interface Vlanif 2
+[Huawei-Vlanif2]ip address 192.168.2.252 24
+[Huawei-Vlanif2]vrrp vrid 2 virtual-ip 192.168.2.254
+
+sw1
+[Huawei-Vlanif1]vrrp vrid 1 priority 105
+sw2
+[Huawei-Vlanif2]vrrp vrid 2 priority 105  修改优先级,立即成为vlan2的主
+查看结果  display vrrp brief 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

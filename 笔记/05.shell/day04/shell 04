@@ -1,0 +1,148 @@
+回顾
+case分支  
+case 变量名 in
+模式1)
+	指令1;;
+模式2)
+	指令2;;
+*)
+	指令N
+esac
+shell函数,精简脚本
+exit,break,continue
+字符串处理
+${变量名称:}    截取
+${变量名称/}   替换   
+${变量名称#}   掐头    
+${变量名称%}   去尾
+${变量名称:-}    定义初值    
+============================
+正则表达式,用在搜索,过滤,筛选文本文档的工具,使用若干符号表示,需要配合某工具执行
+----------------------
+基本正则:
+grep "n$" test		搜索n字母结尾的行
+grep "^bin" test 	搜索bin单词开头的行
+
+grep "[bin]" test    找字母b或i或n的行
+grep "[^bin]" test	 找除了字母b或i或n的行
+grep "[a-z]" test	 找所有小写字母
+grep "[0-9]" test	 找所有数字
+grep "[A-Z]" test	 找所有大写字母
+grep "[a-Z]" test	 找所有字母
+grep "[^a-Z]" test	 找除了字母之外的内容
+
+grep roo. test    找 roo后面任意1个字符的行
+grep ro.. test	  找 ro后面任意2个字符的行
+grep r... test	  找 r后面任意3个字符的行
+grep . test		找所有字符,包括空格,不包括空行
+grep ro*t test	找rot,其中o可以出现任意次
+echo rt >> test  没有o
+echo rooooooot >> test  有很多o 
+grep ro*t test   以上2个都能搜索到
+grep * test		 不能单独使用
+
+grep ".*"  test		匹配任意内容,包括空行
+grep "ro\{1,2\}t" test    o出现了1~2次
+grep "ro\{3,5\}t" test    o出现了3~5次
+grep "ro\{3,7\}t" test    o出现了3~7次 
+grep "ro\{2,7\}t" test    o出现了2~7次  
+grep "ro\{2\}t" test 	  o出现了2次 
+grep "ro\{7\}t" test 	  o出现了7次  
+grep "ro\{2,\}t" test  	  o出现了2次以及2次以上
+grep "ro\{3,\}t" test  	  o出现了3次以及3次以上 
+
+使用扩展正则符号时,需要用grep -E 或者  egrep
+grep "ro+t" test    使用扩展正则符号,不能用grep
+grep -E "ro+t" test  查找rot,其中o可以出现1次以及1次以上
+egrep  "ro+t" test   效果同上
+grep  "ro\{1,\}t" test  效果同上,但扩展的更简洁
+egrep  "ro?t" test  查找rot,其中o可以出现1次或0次
+grep  "ro\{0,1\}t" test      效果同上,但扩展的更简洁
+egrep "ro{2}t" test    o出现2次
+grep "ro\{2\}t" test 	同上
+egrep "ro{7}t" test     o出现7次
+egrep "ro{2,7}t" test 	o出现2~7次
+
+egrep "0:{2}" test 	   找0::   , 没有
+egrep "(0:){2}" test   找0:0:
+grep "\(0:\)\{2\}"  test    效果同上
+egrep "root bin" test   找root bin,没有
+egrep "root|bin" test   找root或bin
+egrep "^root|^bin" test  找root开头或bin开头
+egrep "^(root|bin)" test   效果同上
+
+\b   在匹配字母时,可以实现屏蔽字母,数字,下划线
+grep "the" test01     找有the的行
+grep "the\b" test01     找有the且右边不能是字母,数字,下划线
+grep "\bthe\b" test01  找有the且两边不能是字母,数字,下划线
+grep "\bthe" test01     找有the且左边不能是字母,数字,下划线
+=========================================
+
+grep  过滤文本
+vim   对文本增删改查
+sed  流式编辑器,可以非交互式对文本增删改查, 逐行处理
+1, 前置命令 | sed 选项  (定址符)指令
+2, sed 选项  (定址符)指令   被处理文档
+选项:  -n 屏蔽默认输出    -r 支持扩展正则     -i 写入文件
+指令:  p输出   d删除   s替换
+定址符可以是行号或者正则表达式
+
+sed 'p' test      输出所有行,包括默认输出,每行2遍
+sed -n 'p' test	  没有默认输出, 输出所有行,只有1遍
+sed -n '1p' test  只输出第1行
+sed -n '2p' test  只输出第2行
+sed -n '3p' test  只输出第3行
+sed -n '2,4p' test  输出2~4行
+sed -n '2p;4p' test  输出第2行和第4行
+sed -n '2,+1p' test  输出第2行以及后面的1行
+
+sed -n '1~2p' test     查看奇数行
+sed -n '2~2p' test	   查看偶数行
+sed -n '/root/p' test  使用正则表达式找有root的行
+grep "root" test	  效果同上	
+sed -n '/^root/p' test  找以root开头的行
+grep "^root" test		同上
+sed -n '/bash$/p' test  找以bash结尾的行
+
+sed '1d' test    删除第1行
+sed '3d' test	 删除第3行
+sed '2,4d' test  删除2~4行
+sed '3,+2d' test 删除3行以及后面2行
+sed '1~2d' test  删除奇数行
+sed '2d;4d' test  删除第2行和第4行
+sed  '/xml/d' a.txt  删除所有包含xml的行
+sed  '/xml/!d' a.txt  删除不包含xml的行，!符号表示取反
+sed  '/^install/d' a.txt   删除以install开头的行
+sed  '$d' a.txt       删除文件的最后一行
+sed  '/^$/d' a.txt    删除空行
+
+sed 's/2017/XXXX/' shu    将每行的第1个2017替换成XXXX
+sed 's/2017/XXXX/2' shu  将每行的第2个2017替换成XXXX
+sed '2s/2017/XXXX/2' shu  将第2行的第2个2017替换成XXXX
+sed 's/2017/XXXX/3' shu   将每行的第3个2017替换成XXXX
+sed 's/2017/XXXX/g' shu   将每行的所有2017替换成XXXX
+
+/bin/bash 换成  /sbin/sh
+
+sed 's//bin/bash//sbin/sh/' test    混淆替换符,报错
+sed 's/\/bin\/bash/\/sbin\/sh/' test  正确,但可读性差
+sed 's%/bin/bash%/sbin/sh%' test   更改替换符号
+sed 's(/bin/bash(/sbin/sh(' test   更改替换符号
+
+=====================================
+删除文件中每行的第二个、最后一个字符
+sed 's/.//2;s/.$//' wen 
+
+将文件中每行的第一个、倒数第1个字符互换
+sed -r 's/^(.)(.*)(.)$/\3\2\1/'  wen
+( )  保留(相当于复制)      \1 (相当于粘贴)
+
+为文件中每个大写字母添加括号
+sed -r 's/([A-Z])/{\1}/g' wen
+
+删除所有数字
+sed 's/[0-9]//g' wen
+
+
+
+

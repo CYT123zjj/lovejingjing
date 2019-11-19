@@ -1,0 +1,374 @@
+教学环境介绍
+开机时优先虚拟机classroom，所有的服务随机自启动
+
+真机：使用rht-vmctl辅助工具
+• 控制教学用虚拟机
+– 格式:rht-vmctl   控制指令     虚拟机名
+– 常用控制指令:
+]$ rht-vmctl reset classroom     #先重置资源服务器
+]$ rht-vmctl reset server
+]$ rht-vmctl reset desktop       #再重置练习虚拟机
+
+#####################################################
+
+环境准备1：修改SELinux模式为宽松模式
+虚拟机server：
+[root@server0 /]# getenforce      #查看当前SELinux模式
+Enforcing
+[root@server0 /]# setenforce 0    #修改当前SELinux模式
+[root@server0 /]# getenforce 
+Permissive
+[root@server0 /]# vim /etc/selinux/config #永久修改SELinux模式
+SELINUX=permissive
+
+虚拟机desktop：
+[root@desktop0 /]# getenforce 
+Enforcing
+[root@desktop0 /]# setenforce 0
+[root@desktop0 /]# getenforce 
+Permissive
+[root@desktop0 /]# vim /etc/selinux/config 
+SELINUX=permissive
+
+
+环境准备2：修改防火墙默认的区域为trusted
+虚拟机server：
+[root@server0 ~]# firewall-cmd --set-default-zone=trusted
+ 
+虚拟机desktop：
+[root@desktop0 ~]# firewall-cmd --set-default-zone=trusted 
+
+###########################################################
+iSCSI网络磁盘
+
+iSCSI磁盘的工作模式
+• Internet SCSI,网际SCSI接口  默认端口：3260
+– 一种基于C/S架构的虚拟磁盘技术
+– 服务器提供磁盘空间,客户机连接并当成本地磁盘使用
+
+iSCSI磁盘的构成
+• backstore,后端存储----》大冰箱
+– 对应到服务端提供实际存储空间的设备,需要起一个管理名称
+• target,磁盘组 ----》 木质的箱子
+– 是客户端的访问目标,作为一个框架,由多个lun组成
+• lun,逻辑单元 ----》大冰箱放到木质的箱子的动作
+– 每一个lun需要关联到某一个后端存储设备,在客户端会视为一块虚拟硬盘
+
+         大冰箱----》纸制的包装       木质的箱子
+
+• ISCSI Qualified Name 名称规范(iqn)
+– iqn.yyyy-mm.倒序域名:自定义标识
+– 用来识别 target 磁盘组,也用来识别客户机身份
+
+• 名称示例
+– iqn.2016-02.com.example:server0
+– iqn.2016-02.com.example:desktop0
+
+
+
+服务端：虚拟机server:
+一、划分一个分区，划分一个5G的主分区
+[root@server0 ~]# lsblk 
+[root@server0 ~]# fdisk /dev/vdb
+ n---->分区的类型 回车---->分区的编号 回车---->起始点 回车---->结束点 +5G
+ p 输出分区表
+ w 保存
+
+[root@server0 ~]# lsblk 
+[root@server0 ~]# ls /dev/vdb1
+
+二、安装软件包
+[root@server0 ~]# yum -y install targetcli
+
+三、运行命令进行配置                                
+[root@server0 ~]# targetcli 
+/> ls
+ 
+1.生成后端存储,并起名为nsd
+/> backstores/block create name=nsd dev=/dev/vdb1
+Created block storage object nsd using /dev/vdb1.
+
+/> ls
+/> exit   #退出并保存
+
+2.建立target磁盘组（木质的箱子）
+[root@server0 ~]# targetcli 
+/> ls
+
+/> iscsi/ create iqn.2019-06.com.example:server0
+
+/> ls
+
+3.关联lun，将后端存储放入target磁盘组
+
+/> iscsi/iqn.2019-06.com.example:server0/tpg1/luns    
+   create /backstores/block/nsd 
+
+/> ls
+
+4.配置acl访问控制，设置客户端声称的名字，必须符合iqn名称规范   
+/> iscsi/iqn.2019-06.com.example:server0/tpg1/acls   
+  create iqn.2019-10.com.example:dc
+
+/> ls
+
+5.配置 监听的IP地址与端口
+/> iscsi/iqn.2019-06.com.example:server0/tpg1/portals 
+   create 0.0.0.0
+
+/> exit
+
+  0.0.0.0    #表示本机所有的任意IP地址
+
+
+四、重起服务端服务
+[root@server0 ~]# systemctl restart target
+
+##########################################################
+虚拟机desktop                         
+一、安装软件包
+• 所需软件包:iscsi-initiator-utils
+
+  Yum补全包名前提：
+                 1.该软件包当前系统没有安装
+                 2.必须要有Yum的缓存（yum repolist直接生成缓存）
+
+[root@desktop0 ~]# yum repolist 
+[root@desktop0 ~]# rpm -q iscsi-initiator-utils
+iscsi-initiator-utils-6.2.0.873-21.el7.x86_64
+[root@desktop0 ~]# yum install iscsi(tab)
+
+二、设置客户端声称的名字
+[root@desktop0 ~]# vim /etc/iscsi/initiatorname.iscsi 
+InitiatorName=iqn.2019-10.com.example:dc
+
+三、重起iscsid专门用于刷新客户端声称的名字
+[root@desktop0 ~]# systemctl restart iscsid
+  Warning: Unit file of iscsid.service changed on  
+  disk, 'systemctl daemon-reload' recommended.
+[root@desktop0 ~]# systemctl daemon-reload
+[root@desktop0 ~]# systemctl restart iscsid
+
+   iscsi(主服务)-----》iscsid(子服务)
+四、发现服务端共享存储
+ Linux查看命令帮助的方法 :  man  iscsiadm 
+   全文查找/example   按n项下跳转匹配,看到EXAMPLES
+
+   Ctrl    - ：减小字体
+   Ctrl   Shift   + ：变大字体   
+
+[root@desktop0 ~]# iscsiadm --mode discoverydb --type sendtargets --portal 172.25.0.11 --discover
+
+172.25.0.11:3260,1 iqn.2019-06.com.example:server0
+
+五、加载共享存储
+[root@desktop0 ~]# lsblk 
+
+[root@desktop0 ~]# systemctl restart iscsi
+[root@desktop0 ~]# lsblk 
+NAME   MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
+sda      8:0    0   5G  0 disk 
+
+##########################################################
+数据库服务基础
+
+什么是数据库:存放数据的仓库
+
+   数据库中有众多库，再每一个库中会有众多的表格
+
+• 常见的关系型 数据库管理系统
+– 微软的 SQL Server
+– IBM的 DB2
+– 甲骨文的 Oracle、MySQL
+– 社区开源版 MariaDB
+
+虚拟机server：部署mariadb数据库服务器
+• RHEL7 中的 MariaDB 相关包
+– mariadb-server:提供服务端有关的
+[root@server0 ~]# yum -y install mariadb-server
+[root@server0 ~]# systemctl restart mariadb   #重起数据库服务
+
+• 数据库的基本操作                                              
+[root@server0 ~]# mysql     #进入数据库
+MariaDB [(none)]> show databases;         #显示所有的库
+
+MariaDB [(none)]> create database nsd;  #创建nsd库
+
+MariaDB [(none)]> show databases;       #显示所有的库
+
+MariaDB [(none)]> drop database nsd;    #删除nsd库
+
+MariaDB [(none)]> show databases;       #显示所有的库
+
+MariaDB [(none)]> create database nsd1909; #创建nsd1909库
+MariaDB [(none)]> show databases;      #显示所有的库
+MariaDB [(none)]> exit    #退出数据库
+
+
+[root@server0 ~]# mysql
+MariaDB [(none)]>  show databases;
+MariaDB [(none)]>  use mysql;     #切换到mysql库
+Database changed
+MariaDB [mysql]>  show tables;    #显示当前库中的所有表格
+
+MariaDB [mysql]>  show databases;
+
+MariaDB [mysql]>  use nsd1909;   #切换到nsd1909库
+Database changed
+MariaDB [nsd1909]> exit   #退出数据库 
+
+• Linux命令行完成，为数据库设置密码  
+数据库管理员root，针对数据库有最高权限，mysql库中user表
+Linux管理员root，针对系统有最高权限，/etc/passwd
+
+• 为数据库账号修改密码
+– mysqladmin [-u用户名] [-p[旧密码]]  password '新密码'
+
+[root@server0 ~]# mysqladmin  -u  root  password '456'
+[root@server0 ~]# mysql -u root -p     #交互式进入数据库
+Enter password: 
+
+[root@server0 ~]# mysql -u root -p456  #非交互式进入数据库
+
+• 已知旧密码修改新密码：
+[root@server0 ~]# mysqladmin -u root -p456  password '123'
+[root@server0 ~]# mysql -u root -p123
+
+• 数据库的主配置文件
+[root@server0 ~]# vim /etc/my.cnf
+
+
+数据库的导出/导入操作
+• 导入/恢复到数据库     
+
+– mysql [-u用户名] [-p[密码]]   数据库名  <  备份文件.sql
+
+]# wget http://classroom.example.com/pub/materials/users.sql
+
+]# mysql -u root -p123 nsd1909 < /root/users.sql 
+
+]# mysql -u root  -p123
+MariaDB [(none)]> use nsd1909;   #进入nsd1909库
+MariaDB [nsd1909]> show tables;  #显示当前库中有那些表格
+
+表格操作：  增（insert）  删 （delete）  改（update）   查（select）
+                 表记录      表字段
+  
+                   编号     姓名        联系方式           地址
+           1     dc     13838384838   东村
+           2     tc     13938384838   西村
+
+查询表数据的格式：  select  表字段    from   库名.表名;
+
+]# mysql -u root  -p123
+MariaDB [(none)]> use nsd1909;   #进入nsd1909库
+MariaDB [nsd1909]> show tables;
+MariaDB [nsd1909]> select * from base;      #查看base所有内容
+MariaDB [nsd1909]> select * from location;
+MariaDB [nsd1909]> use mysql;
+MariaDB [mysql]> 
+MariaDB [mysql]> select * from nsd1909.base;
+
+查询表结构：desc  表名；
+MariaDB [mysql]> use nsd1909;      #切换到nsd1909库
+MariaDB [nsd1909]> desc base;      #查看base表结构
+MariaDB [nsd1909]> desc location;  #查看location表结构
+
+MariaDB [nsd1909]> use mysql;        #切换到mysql库
+MariaDB [mysql]> select * from user; 
+MariaDB [mysql]> desc user;
+MariaDB [mysql]> select user,host,password from user;
+
+有条件的查询：
+ select  表字段    from   库名.表名    where  表字段='值'；
+
+MariaDB [mysql]> use nsd1909;
+MariaDB [nsd1909]> select  *  from  base  where  name='tom';
+MariaDB [nsd1909]> select * from  base  where password='456';
+
+MariaDB [nsd1909]> select * from  base  where id='4';
+
+MariaDB [nsd1909]> select * from  location  where id='3';
+
+用户授权设置
+• 数据库授权 
+– 除了 root 用户,此nsd1909数据库只能被用户lisi查询,此用户的密码为123
+
+• MariaDB [(none)]> 交互指令
+– GRANT 权限列表 ON 数据库名.表名   TO   用户名@客户机地址 
+  IDENTIFIED BY '密码';
+
+– grant select on  nsd1909.*  to  lisi@localhost
+  identified by  '123';
+
+   当lisi通过localhost本地进行登陆，输入密码123，将会获得nsd1909库所有表格的查询权限。              
+
+[root@server0 ~]# mysql -u root -p123     
+
+MariaDB [(none)]> grant select on nsd1909.*  to lisi@localhost identified by '123';
+
+
+MariaDB [(none)]> use mysql;
+
+MariaDB [mysql]> select user,host,password from user;
+
+##########################################################
+案例4:使用数据库查询
+1. 禁止空密码root用户访问 mariadb 数据库
+[root@server0 ~]# mysql -u root -p123
+> use mysql;
+> select user,host,password from user;
+
+> select user,host,password from user where password='';
+
+> delete from user where password='';   #删除密码为空的记录
+
+> select user,host,password from user;
+
+> flush privileges;   #刷新user表
+
+> exit
+[root@server0 ~]# mysql -u root -h server0.example.com
+ERROR 1130 (HY000): Host 'server0.example.com' is not allowed to connect to this MariaDB server
+[root@server0 ~]# 
+
+
+
+2. 在系统 虚拟机server0 上使用数据库 nsd1909并使用相
+应的 SQL 查询以回答下列问题:
+1)密码是 solicitous 的人的名字?
+[root@server0 ~]# mysql -u root -p123
+> use nsd1909;
+> select * from base where password='solicitous';
+
+2)有多少人的姓名是 Barbara 同时居住在 Sunnyvale?
+> select * from  base,location        
+  where base.name='Barbara' and                        
+  location.city='Sunnyvale' and  base.id=location.id;
+
+> select count(*) from  base,location        
+  where base.name='Barbara'  and                        
+  location.city='Sunnyvale'  and  base.id=location.id;
+
+> insert  base  values('6','Barbara','789');
+> select  *  from  base;
+
+> insert  location  values('6','Sunnyvale');
+> select  *  from  location;
+
+######################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

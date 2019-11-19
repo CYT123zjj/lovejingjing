@@ -1,0 +1,105 @@
+案例练习,准备:
+            rht-vmctl  reset  classroom
+            rht-vmctl  reset  server
+	        rht-vmctl  reset  desktop
+######################################################
+
+案例1：实现的防火墙配置
+  1）修改虚拟机 server0防火墙配置，将默认区域修改为trusted
+[root@server0 ~]# firewall-cmd --set-default-zone=trusted
+success
+
+[root@server0 ~]# firewall-cmd --get-default-zone
+trusted
+
+  2）修改虚拟机 desktop0防火墙配置，将默认区域修改为trusted
+[root@desktop0 ~]# firewall-cmd --set-default-zone=trusted 
+success
+
+[root@desktop0 ~]# firewall-cmd --get-default-zone 
+trusted
+
+案例2:配置nfs文件夹共享，防火墙默认区域设置为trusted
+  在 server0 上发布共享文件夹
+  1）搭建nfs共享，实现共享本机/public
+[root@server0 ~]# mkdir /public
+[root@server0 ~]# cat /etc/exports
+/public *(ro)
+[root@server0 ~]# systemctl restart nfs-server
+
+  2）共享给所有人可以访问，并且具备只读权限
+  在 desktop0 上访问共享文件夹
+  1）访问 server0 上发布共享/public,
+  2）实现开机自动挂载到/mnt/test
+[root@desktop0 ~]# mkdir /mnt/test
+[root@desktop0 ~]# df -h
+文件系统             容量  已用  可用 已用% 挂载点
+/dev/vda1             10G  3.0G  7.1G   30% /
+devtmpfs             906M     0  906M    0% /dev
+tmpfs                921M   80K  921M    1% /dev/shm
+tmpfs                921M   17M  904M    2% /run
+tmpfs                921M     0  921M    0% /sys/fs/cgroup
+172.25.0.11:/public   10G  3.0G  7.1G   30% /mnt/test
+
+
+
+案例3:为虚拟机 server 配置以下虚拟Web主机
+- 实现三个网站的部署
+- 实现客户端访问server0.example.com网页内容为 卖女孩的小火柴
+- 实现客户端访问www0.example.com网页内容为  奔跑吧骆驼
+- 实现客户端访问webapp0.example.com网页内容为 20里春风不如你
+[root@server0 ~]# yum -y install httpd
+[root@server0 ~]# echo '<h1>卖女孩的小火柴' > /var/www/html/index.html
+[root@server0 ~]# mkdir /var/www/html/dc
+[root@server0 ~]# echo '<h1>奔跑吧骆驼' > /var/www/html/dc/index.html
+[root@server0 ~]# mkdir /var/www/html/dc/tc
+[root@server0 ~]# echo '<h1>20里春风不如你' > /var/www/html/dc/tc/index.html
+[root@server0 ~]# vim /etc/httpd/conf.d/nsd.conf
+[root@server0 ~]# systemctl restart httpd
+[root@server0 ~]# vim /etc/httpd/conf.d/nsd.conf
+<VirtualHost  *:80>
+ServerName server0.example.com
+DocumentRoot /var/www/html
+</VirtualHost>
+<VirtualHost  *:80>
+ServerName www0.example.com
+DocumentRoot /var/www/html/dc
+</VirtualHost>
+<VirtualHost  *:80>
+ServerName webapp0.example.com
+DocumentRoot /var/www/html/dc/tc
+</VirtualHost>
+          
+
+案例4:为虚拟机 server 使用自定Web根目录,设置SELinux为宽松模式
+调整 Web 站点 http://server0.example.com 的网页目录，要求如下：
+1）新建目录 /webroot，作为此站点新的网页目录
+2）确保站点 http://server0.example.com  仍然可访问
+[root@server0 ~]# getenforce 
+Permissiv
+[root@server0 ~]# vim /etc/httpd/conf.d/nsd.conf
+<VirtualHost  *:80>
+ServerName server0.example.com
+DocumentRoot /webroot
+
+
+[root@server0 ~]# vim /etc/httpd/conf/httpd.conf 
+DocumentRoot "/webroot"
+
+<Directory "/webroot">
+    Require all granted
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

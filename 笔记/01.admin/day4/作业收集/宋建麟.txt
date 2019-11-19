@@ -1,0 +1,81 @@
+案例1:为虚拟机 手工配置静态地址参数
+[root@boy ~]# nmtui
+
+案例2:tar制作/释放归档压缩包
+[root@boy ~]# mkdir  /root/boothome  /root/usrsbin
+root@boy ~]# tar  tf   /mnt/boothome.tar.gz
+[root@boy ~]# tar   -xf   /mnt/boothome.tar.gz     -C  /root/boothome
+[root@boy ~]# tar  -jcf  /mnt/usrsbin.tar.bz2   /usr/sbin
+tar: 从成员名中删除开头的“/”
+tar: 从硬连接目标中删除开头的“/”
+[root@boy ~]# tar  -tf  /mnt/usrsbin.tar.bz2
+[root@boy ~]# tar -xf /mnt/usrsbin.tar.bz2    -C /root/usrsbin
+
+案例3：添加并测试用户账号
+[root@boy ~]# useradd  stu01
+[root@boy ~]# tail  -1 /etc/passwd
+stu01:x:3459:3460::/home/stu01:/bin/bash
+[root@boy ~]# tail  -1 /etc/shadow
+stu01:!!:18169:0:99999:7:::
+[root@boy ~]# ls /home
+alex  dc    harry  natasha  nsd02  nsd07  nsd09  nsd11  nsd15  stu01  xixi
+cole  haha  lisi   nsd01    nsd03  nsd08  nsd10  nsd12  paisi  tc
+[root@boy ~]# passwd stu01
+更改用户 stu01 的密码 。
+新的 密码：
+无效的密码： 密码少于 8 个字符
+重新输入新的 密码：
+passwd：所有的身份验证令牌已经成功更新。
+
+案例4：添加账号时设置不同属性
+[root@boy ~]# useradd  -d /opt/nsd01 nsd01
+[root@boy ~]# useradd -u 1234 sys01 
+[root@boy ~]# grep sys01 /sbin/nologin
+[root@boy ~]# passwd  sys01
+新的 密码：
+无效的密码： 密码少于 8 个字符
+重新输入新的 密码：
+passwd：所有的身份验证令牌已经成功更新。
+[root@boy home]# gpasswd -a admin  adm
+正在将用户“admin”加入到“adm”组中
+[root@boy home]# gpasswd -a admin  root
+正在将用户“admin”加入到“root”组中
+
+案例5：passwd设置密码
+[root@boy ~]# passwd nsd01
+更改用户 nsd01 的密码 。
+新的 密码：
+无效的密码： 密码少于 8 个字符
+重新输入新的 密码：
+passwd：所有的身份验证令牌已经成功更新。
+[root@boy ~]# echo 654321 | passwd --stdin nsd01
+更改用户 nsd01 的密码 。
+passwd：所有的身份验证令牌已经成功更新。
+
+
+案例6：usermod修改用户
+[root@boy ~]# useradd -d /opt/home03 nsd03
+[root@boy ~]# passwd nsd03
+[root@boy ~]# echo redhat | passwd --stdin nsd03
+[root@boy ~]# usermod -d /home/nsd03 nsd03
+[root@boy ~]# usermod -s /sbin/bash sys01
+
+
+
+案例7：组账号基本管理
+[root@boy home]# groupadd stugrp
+[root@boy home]# useradd -G stugrp user01
+[root@boy home]# useradd -G stugrp root
+useradd：用户“root”已存在
+[root@boy home]# useradd -G stugrp zhangsan
+[root@boy home]# gpasswd -d user01 stugrp
+正在将用户“user01”从“stugrp”组中删除
+
+
+
+
+
+
+
+
+

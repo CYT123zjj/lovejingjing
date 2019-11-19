@@ -1,0 +1,173 @@
+opt
+案例：复制、删除、移动
+  1. 在目录/opt下创建一个子目录nsd
+  [root@A ~]# ls /opt
+boot  g.txt  ls.txt  nsd  nsd19  redhat-release  rh  sb.haha
+
+  2. 在目录/opt/nsd/创建文件readme.txt,利用vim写入内容 I Love Linux
+[root@A ~]# cat  /reademe.txt
+
+I LOVE LINUX
+
+  3. 将/etc/passwd 和 /etc/resolv.conf同时拷贝到/opt/nsd目录下 
+[root@A opt]# ls /opt/nsd
+passwd  readme.txt  resolv.conf
+
+  4. 将文件 /etc/redhat-release复制到 /root/ 下，同时 改名为 version.txt 
+[root@A /]# cp /etc/redhat-release  /root/version.txt
+[root@A /]# ls /root/
+abc              initial-setup-ks.cfg  公共  视频  文档  音乐
+anaconda-ks.cfg  version.txt           模板  图片  下载  桌面 
+
+
+  5. 将文件 /root/version.txt 移动到/opt/nsd/目录下 
+[root@A /]# mv /root/version.txt /opt/nsd/
+[root@A /]# ls /opt/nsd
+passwd  readme.txt  resolv.conf  version.txt
+
+  6. 将/home目录复制到/opt/nsd/目录下 
+[root@A /]# cp -r /home /opt/nsd
+[root@A /]# ls /opt/nsd
+home  passwd  readme.txt  resolv.conf  version.txt
+
+
+案例：复制、删除、移动
+  1. 在目录/mnt下创建一个子目录 abc
+[root@A /]# mkdir /mnt/abc
+[root@A /]# ls /mnt
+abc
+ 
+  2. 在目录/mnt/abc/创建文件readme.txt,利用vim写入内容 I Love Study
+[root@A /]# cat /mnt/abc/readme.txt
+I Love Study
+
+  3. 将/etc/passwd 和 /etc/resolv.conf同时拷贝到/mnt/abc/目录下
+[root@A /]# cp /etc/passwd  /etc/resolv.conf /mnt/abc/
+[root@A /]# ls /mnt/abc/
+passwd  readme.txt  resolv.conf
+
+  4. 将文件 /etc/redhat-release复制到 /mnt/ 下，同时 改名为 version.txt 
+[root@A /]# cp /etc/redhat-release  /mnt/version.txt
+[root@A /]# ls /mnt
+abc  version.txt
+
+  5. 将文件  /mnt/version.txt 移动到/opt/nsd/目录下强制覆盖 
+[root@A /]# ls /opt/nsd/
+home  passwd  readme.txt  resolv.conf  version.txt
+
+  6. 将/boot目录复制到/mnt/abc/目录下
+ [root@A /]# cp -r /boot /mnt/abc
+[root@A /]# ls /mnt/abc
+boot  passwd  readme.txt  resolv.conf
+
+
+
+
+案例：ls命令练习
+  1. 查看根目录下内容
+[root@A /]# ls /
+bin   dev  etc  home  lib64  mnt  proc         root  sbin  sys  usr
+boot  dvd  hhh  lib   media  opt  reademe.txt  run   srv   tmp  var
+
+  2. 显示根目录本身详细属性   
+总用量 28
+lrwxrwxrwx.   1 root root    7 9月  28 10:17 bin -> usr/bin
+dr-xr-xr-x.   6 root root 4096 9月  28 15:59 boot
+drwxr-xr-x.  21 root root 3280 9月  29 18:58 dev
+drwxr-xr-x.   2 root root    6 9月  29 10:45 dvd
+drwxr-xr-x. 134 root root 8192 9月  29 18:58 etc
+drwxr-xr-x.   2 root root    6 9月  28 17:19 hhh
+drwxr-xr-x.   5 root root   42 9月  29 11:37 home
+lrwxrwxrwx.   1 root root    7 9月  28 10:17 lib -> usr/lib
+lrwxrwxrwx.   1 root root    9 9月  28 10:17 lib64 -> usr/lib64
+drwxr-xr-x.   2 root root    6 4月  11 2018 media
+drwxr-xr-x.   3 root root   17 9月  29 20:09 mnt
+drwxr-xr-x.   6 root root  116 9月  29 19:02 opt
+dr-xr-xr-x. 206 root root    0 9月  29 18:57 proc
+-rw-r--r--.   1 root root   14 9月  29 19:08 reademe.txt
+dr-xr-x---.  15 root root 4096 9月  29 19:57 root
+drwxr-xr-x.  39 root root 1260 9月  29 18:58 run
+lrwxrwxrwx.   1 root root    8 9月  28 10:17 sbin -> usr/sbin
+drwxr-xr-x.   2 root root    6 4月  11 2018 srv
+dr-xr-xr-x.  13 root root    0 9月  29 18:57 sys
+drwxrwxrwt.  28 root root 4096 9月  29 20:03 tmp
+drwxr-xr-x.  13 root root  155 9月  28 10:17 usr
+drwxr-xr-x.  20 root root  282 9月  28 10:39 var
+
+  3. 切换到/boot目录，显示当前目录内容的详细属性，并加上易读的容量单
+总用量 130M
+-rw-r--r--. 1 root root 145K 4月  21 2018 config-3.10.0-862.el7.x86_64
+drwxr-xr-x. 3 root root   17 9月  28 10:17 efi
+drwxr-xr-x. 2 root root   27 9月  28 10:18 grub
+drwx------. 5 root root   97 9月  28 10:38 grub2
+-rw-------. 1 root root  71M 9月  28 10:33 initramfs-0-rescue-f70f40b6feb84b229a0caec6af110d3b.img
+-rw-------. 1 root root  31M 9月  28 10:38 initramfs-3.10.0-862.el7.x86_64.img
+-rw-------. 1 root root  13M 9月  28 10:39 initramfs-3.10.0-862.el7.x86_64kdump.img
+drwxr-xr-x. 2 root root    6 9月  28 15:59 nsd01
+-rw-r--r--. 1 root root 298K 4月  21 2018 symvers-3.10.0-862.el7.x86_64.gz
+-rw-------. 1 root root 3.3M 4月  21 2018 System.map-3.10.0-862.el7.x86_64
+-rwxr-xr-x. 1 root root 6.0M 9月  28 10:33 vmlinuz-0-rescue-f70f40b6feb84b229a0caec6af110d3b
+-rwxr-xr-x. 1 root root 6.0M 4月  21 2018 vmlinuz-3.10.0-862.el7.x86_64
+
+  4. 显示/root的全部内容，包括隐藏文档
+[root@A /]# ls -rA /root
+桌面  图片  .viminfo  initial-setup-ks.cfg  .cshrc   .bash_profile    abc
+音乐  视频  .tcshrc   .ICEauthority         .config  .bash_logout
+下载  模板  .local    .esd_auth             .cache   .bash_history
+文档  公共  .lesshst  .dbus                 .bashrc  anaconda-ks.cfg
+
+  5. 显示/bin/bash程序，详细属性
+[root@A /]# ls -l /bin/bash
+-rwxr-xr-x. 1 root root 964544 4月  11 2018 /bin/bash
+
+  6. 显示/dev/cdrom光驱设备，详细属性
+[root@A /]# ls -l /dev/cdrom
+lrwxrwxrwx. 1 root root 3 9月  29 18:57 /dev/cdrom -> sr0
+
+
+
+案例：mount挂载
+  1. 在根目录下创建目录结构/centos/dvd
+[root@A /]# mkdir /centos/dvd
+
+  2. 利用图形将光盘文件CentOS7-1804.iso放入光驱设备中
+  3. 将光驱设备挂载到/centos/dvd目录，以/centos/dvd目录作为其访问点
+root@lanceyan ~]# mount /dev/cdrom /centos/dvd/
+mount: /dev/sr0 写保护，将以只读方式挂载
+
+  4. 查看/centos/dvd/Packages目录内容
+[root@lanceyan ~]# ls /centos/dvd/Packages/
+．．．
+
+  5. 将/centos/dvd/Packages目录中以vsftpd开头的软件包，拷贝到/opt下
+   cp  /centos/dvd/Packages/vsftpd*   /opt
+[root@lanceyan ~]# cp /centos/dvd/Packages/vsftpd* /opt/
+[root@lanceyan ~]# ls /opt/
+boot  hostname.txt  redhat-release  vsftpd-3.0.2-22.el7.x86_64.rpm
+home  nsd           rh              vsftpd-sysvinit-3.0.2-22.el7.x86_64.rpm
+
+
+案例:虚拟机上操作,查找并提取文件内容
+    1.利用grep显示/etc/fstab文件中以UUID开头的信息
+[root@lanceyan ~]# grep ^UUID /etc/fstab 
+UUID=7b77b188-5e92-4885-ac58-e40be340e38e /boot                   xfs     defaults        0 0
+
+
+    2.利用grep显示/etc/passwd以bash结尾的行
+root@lanceyan ~]# grep bash$ /etc/passwd
+root:x:0:0:root:/root:/bin/bash
+lisi:x:1000:1000:lisi:/home/lisi:/bin/bash
+
+    3.利用grep显示/etc/login.defs 以#开头的行
+    4.利用grep显示/etc/login.defs 不要以#开头的行
+
+
+
+案例：别名
+  1. 为虚拟机定义一个别名，执行byebye可以实现关闭系统
+  
+
+
+
+
+

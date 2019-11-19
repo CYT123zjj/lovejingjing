@@ -1,0 +1,124 @@
+案例练习,准备:
+            rht-vmctl  reset  classroom
+            rht-vmctl  reset  server
+	        rht-vmctl  reset  desktop
+######################################################
+
+案例1:为虚拟机 server 配置以下虚拟Web主机
+- 实现三个网站的部署
+- 实现客户端访问server0.example.com网页内容为 大圣归来
+- 实现客户端访问www0.example.com网页内容为  大圣又归来
+- 实现客户端访问webapp0.example.com网页内容为 大圣累了
+[root@server0 ~]# yum -y install httpd
+[root@server0 ~]# vim /etc/httpd/conf.d/xiaohan.conf
+<VirtualHost *:80>
+ServerName server0.example.com
+DocumentRoot /var/www/xiaoli1
+</VirtualHost>
+<VirtualHost *:80>
+ServerName www0.example.com
+DocumentRoot /var/www/xiaoli2	
+</VirtualHost>
+<VirtualHost *:80>
+ServerName webapp0.example.com
+DocumentRoot /var/www/xiaoli3
+</VirtualHost>
+[root@server0 ~]# cd /var/www
+[root@server0 www]# mkdir xiaoli1 xiaoli2 xiaoli3
+[root@server0 www]# echo '<h1> 大圣归来'> /var/www/xiaoli1/index.html
+[root@server0 www]# echo '<h1> 大圣又归来'> /var/www/xiaoli2/index.html
+[root@server0 www]# echo '<h1> 大圣累了'> /var/www/xiaoli3/index.html
+[root@server0 www]# systemctl restart httpd
+[root@desktop0 ~]# firefox server0.example.com
+[root@desktop0 ~]# firefox www0.example.com
+[root@desktop0 ~]# firefox webapp0.example.com
+
+
+案例2:为虚拟机 server 配置Web访问控制
+在 Web 网站 http://server0.example.com 的 DocumentRoot 目录下创建一个名为 private 的子目录，要求如下：
+1）在server0.example.com的DocumentRoot目录下，private的子目录里书写网页文件index.html内容为  大圣偷偷归来
+[root@server0 www]# vim /etc/httpd/conf.d/xiaohan.conf
+[root@server0 www]# mkdir /var/www/xiaoli1/private
+[root@server0 www]# ls /var/www/xiaoli1
+[root@server0 www]# echo '<h1> 大圣偷偷归来' > /var/www/xiaoli1/private/index.html
+[root@server0 www]# systemctl restart httpd
+[root@desktop0 ~]# firefox server0.example.com/private
+
+
+2）此页面只能在本机浏览，但是从其他系统不能访问这个目录的内容
+[root@server0 /]# vim /etc/httpd/conf.d/xiaohan1.conf
+Directory /var/www/xiaoli1/private>
+    Require ip 172.25.0.11
+</Directory>
+[root@server0 /]# systemctl restart httpd
+[root@desktop0 ~]# firefox server0.example.com/private
+
+Forbidden
+
+You don't have permission to access /private/ on this server.
+
+
+案例3:为虚拟机 server 使用自定Web根目录(保证SELinux为开启状态)
+调整 Web 站点 http://server0.example.com 的网页目录，要求如下：
+1）新建目录 /webroot，作为此站点新的网页目录
+[root@server0 /]# mkdir /webroot
+
+2）确保站点 http://server0.example.com  仍然可访问
+[root@server0 /]# echo '<h1> 我是weboot哦' > /webroot/index.html
+[root@server0 /]# vim /etc/httpd/conf.d/xiaohan2.conf
+<Directory /webroot>
+    Require all granted
+</Directory>
+~
+[root@server0 /]# systemctl restart httpd
+[root@server0 /]# setenforce 1
+[root@server0 /]# getenforce
+Enforcing
+[root@server0 /]# ls -Zd /var/www/
+drwxr-xr-x. root root system_u:object_r:httpd_sys_content_t:s0 /var/www/
+[root@server0 /]# ls -Zd /webroot
+drwxr-xr-x. root root system_u:object_r:httpd_sys_content_t:s0 /webroot
+[root@server0 /]# systemctl restart httpd
+[root@desktop0 ~]# firefox server0.example.com
+
+
+案例4：为虚拟机 server 部署动态WSGI站点
+为站点 webapp0.example.com 配置提供动态Web内容，要求如下：
+1）此虚拟主机侦听在端口8909
+[root@server0 ~]# cd /var/www/abc03/
+[root@server0 abc03]# wget http://classroom.example.com/pub/materials/webinfo.wsgi
+[root@server0 abc03]# vim /etc/httpd/conf.d/nsd01.conf
+[root@server0 abc03]# systemctl restart httpd
+[root@server0 abc03]# yum -y install mod_wsgi
+[root@server0 abc03]# vim /etc/httpd/conf.d/nsd01.conf
+[root@server0 abc03]# systemctl restart httpd
+[root@server0 abc03]# vim /etc/httpd/conf.d/nsd01.conf
+[root@server0 /]# semanage port -a -t http_port_t  -p tcp 8909
+[root@server0 /]# systemctl restart httpd
+[root@server0 /]# firefox  webapp0.example.com:8909
+
+
+案例5：配置安全Web服务
+为站点 https://www0.example.com 配置TLS加密 
+1）一个已签名证书从以下地址获取 http://classroom/pub/tls/certs/server0.crt 
+2）此证书的密钥从以下地址获取 http://classroom/pub/tls/private/server0.key 
+3）根证书的签名授权信息从以下地址获取 http://classroom/pub/example-ca.crt
+
+[root@server0 /]# yum -y install mod_ssl
+[root@server0 /]# ls /etc/httpd/conf.d/ssl.conf
+[root@server0 ~]# wget http://classroom.example.com/pub/tls/certs/server0.crt
+[root@server0 ~]# wget http://classroom/pub/tls/private/server0.key
+[root@server0 ~]# wget http://classroom/pub/example-ca.crt
+[root@server0 ~]# systemctl restart httpd
+[root@server0 ~]# firefox https://www0.example.com
+
+
+
+
+
+
+
+
+
+
+
