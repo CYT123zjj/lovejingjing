@@ -1,0 +1,129 @@
+RDBMS1_DAY01
+一、搭建MySQL数据库服务器
+二、基本使用
+	连接方式： mysql命令
+	管理数据使用语言：SQL
+	SQL使用规则？  
+	管理表记录  select  insert  update  delete
+
+	建库--->建表--->记录
+三、mysql数据类型
+字符类型  数值类型（整数 浮点） 日期时间类型  枚举（menu/set）
+		  year/date/time/datetime/timestamp
+
++++RDBMS1_DAY02
+一、表结构
+	1.1 约束条件：限制字段赋值
+			
+	1.2 修改表结构
+
+ alter table db2.stuinfo 
+    -> add  sex enum("boy","gilr") not null default "boy";
+
+ alter table db2.stuinfo  add   stu_id  int first;
+
+ alter table db2.stuinfo 
+    -> add mail char(50) default "stu@163.com" after name;
+
+ alter table db2.stuinfo 
+    -> modify age  int  not null default 19; 
+
+alter table stuinfo modify name char(10) after mail;
+
+alter table db2.stuinfo change mail  
+       email char(50) default "stu@163.com";
+
+alter table stuinfo  drop stu_id ,drop age;
+
+alter table t1 rename student;
+
+
+二、MySQL 键值: 各自的功能不同，共同点都可以约束字段赋值
+    普通索引 index  ***
+    唯一索引 unique
+    主键 primary key ***
+    外键  foreign key ***
+    全文索引 fulltext
+
+    2.1 普通索引的使用
+		普通索引介绍？ 给字段值排队
+ 			       目的加快查询数据的速度
+			       select 
+			
+		使用规则？
+		创建索引：
+			在已有表里创建索引
+			建表时创建索引		
+			查看索引详细信息？
+			删除索引？
+
+    2.2 主键的使用 primary key
+		1 主键的使用规则？
+		2 创建主键：
+			建表时创建主键
+			在已有表里创建主键
+	
+		        复合主键（表中多个列一起做主键）
+			    建表时创建
+			    在已有表里创建
+
+t5
+PRI    PRI              PRI
+姓名   班级    缴费     学号
+name   class   status   stu_num
+bob    nsd1909  yes
+bob    nsd1909  yes
+
+> alter table t5  add  stu_num  int  ;
+> alter table t5  drop primary key;
+> delete from  t5;
+> alter table t5 add primary key(name,class,stu_num);
+> desc t5;
+> insert into t5 values();
+			primary key 主auto_increment连接
+				      自增长 i++
+					     i=i+1
+			
+id  name age  sex class
+1   bob  21   boy  nsd1909
+2   bob  21   boy  nsd1909
+3   bob  21   boy  nsd1909
+
+    2.3 外键的使用
+
+alter table  gz add primary key(gz_id);
+
+insert into  gz values(1,20000);
+insert into  gz values(2,40000);
+
+
+update yg set yg_id=6 where yg_id=2;
+delete from yg where yg_id=1;
+
+>show create table  gz\G;
+
+>alter table gz drop foreign key gz_ibfk_1 ;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

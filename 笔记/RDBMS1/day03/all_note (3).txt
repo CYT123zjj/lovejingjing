@@ -1,0 +1,480 @@
+RDBMS1_DAY01
+一、搭建MySQL数据库服务器
+二、基本使用
+	连接方式： mysql命令
+	管理数据使用语言：SQL
+	SQL使用规则？  
+	管理表记录  select  insert  update  delete
+
+	建库--->建表--->记录
+三、mysql数据类型
+字符类型  数值类型（整数 浮点） 日期时间类型  枚举（menu/set）
+		  year/date/time/datetime/timestamp
+
++++RDBMS1_DAY02
+一、表结构
+	1.1 约束条件：限制字段赋值
+			
+	1.2 修改表结构
+
+ alter table db2.stuinfo 
+    -> add  sex enum("boy","gilr") not null default "boy";
+
+ alter table db2.stuinfo  add   stu_id  int first;
+
+ alter table db2.stuinfo 
+    -> add mail char(50) default "stu@163.com" after name;
+
+ alter table db2.stuinfo 
+    -> modify age  int  not null default 19; 
+
+alter table stuinfo modify name char(10) after mail;
+
+alter table db2.stuinfo change mail  
+       email char(50) default "stu@163.com";
+
+alter table stuinfo  drop stu_id ,drop age;
+
+alter table t1 rename student;
+
+
+二、MySQL 键值: 各自的功能不同，共同点都可以约束字段赋值
+    普通索引 index  ***
+    唯一索引 unique
+    主键 primary key ***
+    外键  foreign key ***
+    全文索引 fulltext
+
+    2.1 普通索引的使用
+		普通索引介绍？ 给字段值排队
+ 			       目的加快查询数据的速度
+			       select 
+			
+		使用规则？
+		创建索引：
+			在已有表里创建索引
+			建表时创建索引		
+			查看索引详细信息？
+			删除索引？
+
+    2.2 主键的使用 primary key
+		1 主键的使用规则？
+		2 创建主键：
+			建表时创建主键
+			在已有表里创建主键
+	
+		        复合主键（表中多个列一起做主键）
+			    建表时创建
+			    在已有表里创建
+
+t5
+PRI    PRI              PRI
+姓名   班级    缴费     学号
+name   class   status   stu_num
+bob    nsd1909  yes
+bob    nsd1909  yes
+
+> alter table t5  add  stu_num  int  ;
+> alter table t5  drop primary key;
+> delete from  t5;
+> alter table t5 add primary key(name,class,stu_num);
+> desc t5;
+> insert into t5 values();
+			primary key 主auto_increment连接
+				      自增长 i++
+					     i=i+1
+			
+id  name age  sex class
+1   bob  21   boy  nsd1909
+2   bob  21   boy  nsd1909
+3   bob  21   boy  nsd1909
+
+    2.3 外键的使用
+
+alter table  gz add primary key(gz_id);
+
+insert into  gz values(1,20000);
+insert into  gz values(2,40000);
+
+
+update yg set yg_id=6 where yg_id=2;
+delete from yg where yg_id=1;
+
+>show create table  gz\G;
+
+>alter table gz drop foreign key gz_ibfk_1 ;
+  1-2 
+
+ insert into  
+++++++RDBMS1_DAY03
+一 数据导入数据导出
+	1.1 检索目录：数据导入和数据导出时文件存放的目录
+		查看默认目录？
+			show  variables;
+			show  variables  like "%file%";
+			show  variables  like "secure_file_priv";
+
+		修改检索目录？
+			]# mkdir  /myload  
+			]# chown  mysql  /myload
+			]# vim  /etc/my.cnf
+     				[mysqld]
+     				secure_file_priv="/myload“
+			:wq
+			]# systemctl  restart mysqld
+
+	1.2 数据导入：
+		什么是数据导入： 把系统文件内容存储到数据库的表里
+		作用：批量存储数据到表里
+		命令格式？ load data
+		注意事项？
+		数据导入的步骤？
+		例子：
+		create database db3;
+		create table  db3.user(
+name char(50),password  char(1) , uid  int ,
+gid int , comment varchar(150),homedir char(80),
+shell char(100)
+);
+mysql> system cp /etc/passwd /myload/
+mysql> system ls /myload
+mysql> load  data infile "/myload/passwd" into table 
+    -> db3.user
+    -> fields terminated by ":"  
+    -> lines terminated by "\n" ;
+
+mysql> alter table  db3.user 
+    -> add
+    -> id int primary key  auto_increment
+    -> first;
+mysql> select  * from  db3.user;
+mysql> select  * from  db3.user where id = 1;
+
+	1.3 数据导出:
+              什么是数据数据导出：把表记录存储到系统文件里
+	      作用： 把表记录存储到系统文件里
+	      命令格式？
+select命令   into   outfile   “目录名/文件名”
+            fields  terminated   by   “分隔符”
+            lines   terminated   by   “\n” ;  
+
+	      注意事项？
+	      例子：
+二、管理表记录
+	2.1 插入表记录
+		命令格式？
+			插入1条表记录给所有字段赋值
+insert into db3.user values 
+(23,"john","x",2001,2001,"test user","/home/john","/bin/bash");
+
+			插入多条表记录给所有字段赋值	
+insert into db3.user
+values
+(24,"john2","x",2007,2001,"test user","/home/john","/bin/bash"),
+(25,"john7","x",2005,2001,"test user","/home/john","/bin/bash"),
+(26,"j3ohn","x",2003,2001,"test user","/home/john","/bin/bash");
+
+			插入1条表记录给部分字段赋值
+insert into  db3.user(name,uid,gid)
+values
+("tom",3001,3001);
+
+
+			插入多条表记录给部分字段赋值
+
+		注意事项？
+		插入表记录
+	2.2 查询表记录
+		 命令格式？
+	select  字段名列表 from 库.表[ where 条件 ]；
+	
+
+	2.3 更新表记录 :修改指定列的值
+		命令格式？
+update   库名.表名  set  字段名=值,字段名=值,字段名=值
+where   [ 条件表达式 ];
+
+		注意事项？
+
+	2.4 删除表记录
+		命令格式？
+		delete from 库.表[ where 条件]；
+		注意事项？
+
+insert into  db3.user(name,uid,gid)
+values
+("bob",2005,2005),("alices",2008,2008),("jerry",4001,4001);
+
+select  *  from  db3.user;
+select id , name from db3.user where id <= 2; 
+select * from db3.user where shell = "/bin/bash";
+mysql> update  db3.user  set 
+    -> password="a" , comment="student";
+
+mysql> update db3.user set password="x" , comment="root" 
+    -> where  id = 1;
+
+mysql> select  * from  db3.user where id >= 23;
+
+
+
+
+三、匹配条件
+	3.1 基本匹配条件 （适用与 select / update /delete）
+		数值比较
+select name from  db3.user where  uid = 1;
+
+select  * from  db3.user where id <= 10 ;
+
+select name,uid,gid from db3.user where uid = gid ;
+select name,uid,gid from db3.user where uid != gid ;
+
+		字符比较
+select name , shell from db3.user where shell !=  "/bin/bash";
+select name , shell from db3.user where shell =  "/bin/bash";
+
+
+		匹配空 is null
+mysql> insert into user(name) values("NULL");
+mysql> insert into user(name) values(""),(null),("null");
+mysql> select id ,name from  user where name="null";
+mysql> select id ,name from  user where name is null;
+mysql> select id ,name from  user where name="";
+		匹配非空 is not null
+mysql> select id ,name from  user where name is not  null;
+		逻辑匹配:多个判断条件时使用
+		  逻辑与  and 或 &&    多个条件都匹配
+		  逻辑或  or  或 ||    某1个条件匹配即可
+		  逻辑非  not 或 ！     取反
+mysql> select  * from  user where   name="root"  or  uid=1;
+mysql> select  * from  user where   name="root"  and  uid=1;
+		范围匹配
+			between 数字1 and  数字2
+			in  (值列表)
+			not  in  (值列表)
+select   name,uid from user where  uid  between 10 and 30;
+select   name,uid from user where  uid  in (3,7,9,11);
+select   name  from  user where name in ("apache","mysql","sync");
+
+select shell,name from user where  
+        shell not in  ("/bin/bash","/sbin/nologin");
+		
+		去重显示 distinct  字段名
+mysql> select  distinct  gid from user;
+
+
+	3.2 高级匹配条件 （适用与 select / update /delete）
+		模糊查询 like
+			 通配符：
+				_ 表示1个字符
+	
+				% 表示0~n个字符
+
+	select name from  user  where name like '____';
+	select name from  user  where name like '___';
+	select name from  user  where name like '__%__';
+        select name from  user  where name like 'a%';
+        select name from  user  where name like '%a%';
+	
+	       正则表达式 regexp
+			元字符   ^   $   .   [ ]   *    | 
+
+select name ,uid  from user where  name regexp 't$' ;
+select name ,uid  from user where  name regexp '^a' ;
+select name ,uid  from user where  name regexp '^a|t$' ;
+select name ,uid  from user where  name regexp '^r.*t$' ;
+select name ,uid  from user where  name regexp '^[aft]' ;
+
+select name ,uid  from user where uid regexp '..' ;
+select name ,uid  from user where uid regexp '^..$' ;
+
+      		四则运算 + -  *  /   %
+
+select name ,uid  from user where  uid % 2  = 0 ;
+select name ,uid  from user where  uid % 2  != 0 ;
+
+update user set uid=uid+1 where id <= 3 ;
+update user set uid=uid-1 where id <= 3 ;
+
+mysql> alter table user 
+    -> add
+    -> age  int  default 19 after name ;
+
+select name , age , 2019 - age s_year from user where name="root";
+
+select name ,uid , gid , (uid+gid)/2  pjz from user where name="mysql";
+	
+	3.3 操作查询结果 （适用与 select）
+		3.3.1 聚集函数 ：mysql服务内置命令
+			        对数据做统计的命令
+select  count(*) from  user;
+select  count(name) from  user; 
+
+select max(gid) from user;
+select max(uid) from user;
+
+select min(uid) from  user where  uid>=10 and uid<=40;
+select avg(age) from user;
+select sum(age) from user;
+
+		查询结果排序 order by 
+select name , uid  from user   where  uid between 10 
+    -> and 100 order by  uid ;
+
+select name , uid  from user   where  uid between 10
+    -> and 100 order by  desc ;
+
+	        查询结果分组 group by
+select shell from user group by shell;
+
+mysql> select shell from user where uid <= 10 
+    -> group by  shell;
+
+		查询结果过滤 having  条件
+mysql> select name from user where shell != "/bin/bash"
+    -> having name="mysql";
+
+		限制查询结果显示行数 limit
+			limit 数字； 显示查询结果前多少条记录
+select id,name from user where uid <= 10 limit 1;
+select id,name from user where uid <= 10 limit 3;
+
+	limit 数字1,数字2 //显示指定范围内的查询记录
+		数字1  起始行 （0 表示第1行  ）
+                数字2  总行数
+
+select  * from user limit 0,2 ;
+select  * from user limit 2,2 ;
+
+ select name,uid  from user where uid >=10 and uid <= 100 
+ order by  uid  desc  limit  3;
+
+四、mysql管理工具
+	
++++++++RDBMS1_DAY04
+一、用户授权：
+	什么是用户授权？ 在数据库服务器添加用户并设置权限
+	命令格式？
+              grant  权限列表  on   库名  to  用户名@”客户端地址” 
+    identified  by  “密码” //授权用户密码
+    with  grant  option ;    //有授权权限 ,可选项
+
+grant  insert(name,uid),select on db3.user  to admin3@"localhost" 
+idenified by  "123qqq...A";
+
+select  * from  mysql.columns_priv ;
+
+
+
+	授权例子192.168.4.50
+
+	相关命令？
+
+	测试授权 192.168.4.52/53
+
+	授权信息存储在那里了？ mysql库下的表
+			user db  tables_priv   columns_priv
+	
+	撤销权限: 删除授权用户的权限。
+		命令格式？ revoke
+	revoke  权限列表  on  库名.表   from    用户名@"客户端地址";
+
+	select  host , user  from mysql.user;
+
+	show grants  for mydba@"%";
+
+	revoke grant option on *.*  from mydba@"%";
+
+
+	revoke  delete ,  update  on  *.* from mydba@"%";
+
+
+	revoke all on  *.* from mydba@"%";
+
+	授权grant  
+	撤销revoke        
+
+	工作岗位: 数据库管理员 、DBA
+			
+二、数据备份
+
+	数据备份方式? 
+	数据备份策略
+	数据完全备份与恢复
+		备份数据 192.168.4.50
+		 命令格式：
+		 ]#mysqldump   -uroot    -p密码    库名  >  目录/xxx.sql
+
+		恢复数据 192.168.4.51
+		命令格式：
+                mysql  -uroot    -p密码   [ 库名 ]   <   目录/xxx.sql
+		
+]#mysqldump -uroot -p123456  -A  > /root/allbak.sql
+]#mysqldump -uroot -p123456 db3 user  > /root/db3_user.sql	
+
+
+50 ~]# mysqldump -uroot -p123456 -B db3 mysql   > twodb.sql
+
+51 ~]# mysql -uroot -p123456  < /opt/twodb.sql 
+
+
+
+三、增量备份:启用mysql服务的binlog日志，实现数据增量备份。
+	3.1 binlog日志的使用
+		1 binlog日志介绍？
+		2 启用binlog日志
+
+		3 手动生成新的日志文件：
+      
+
+
+
+	3.2 使用binlog日志恢复数据 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

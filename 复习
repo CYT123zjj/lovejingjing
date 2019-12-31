@@ -1,0 +1,41 @@
+shell
+nginx
+调度
+mysql
+zabbix
+安全
+nosql
+
+4阶段   大型架构 容器                 :听 总结  练 讨论  注意身体,全神贯注    每个人都要写总结,学了什么
+5阶段  devops   写网站 清楚架构代码走向  懂一门开发
+知识必须知道有什么  知识总结
+深度...广度
+做技术资料库
+写文档能力  思维方式
+总结,每天
+面试录音
+学习工具: https://www.huaweicloud.com/
+工具openstack学好
+pycharm  (破解版)
+
+
+------命令
+sysctl -a | grep ip_forward  查看路由转发功能
+命令行上操作
+for i in
+do
+tcpdump -i eth0 port 80
+配置nfs
+yum -y install  nfs-utils   rpcbind
+
+s30 ~]# vim /etc/exports
+/sitedir *(rw)
+ [root@nfs30 ~]# systemctl  start rpcbind   先启动后
+[root@nfs30 ~]# systemctl  start nfs
+
+
+
+web33 ~]# systemctl  enable remote-fs.target //设置远程加载服务开机运行
+web33 mount | grep "/var/www/html
+
+

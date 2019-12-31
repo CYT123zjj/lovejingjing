@@ -1,0 +1,21 @@
+http {
+.....
+upstream web1 {
+ server 192.168.4.100:80 weight=1 max_fails=1 fail_timeout=30;
+}
+upstream web2 {
+ server 192.168.4.200:8080 weight=1 max_fails=1 fail_timeout=30;
+}
+
+
+
+location / {
+            root   html;
+            index  index.jsp  index.htm;
+        }
+      location ~ .*\.(html|gif|jpg|png|bmp|swf|jpeg)$ {
+                proxy_pass http://web1;
+        }
+location ~ .*\.jsp$ {
+                proxy_pass http://web2;
+}
